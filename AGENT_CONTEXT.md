@@ -1,19 +1,18 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17T00:00:00Z — Initialised by Agent Session 1
+2026-02-17 — Agent Session 1 / Task 0a
 
 ## Project State
-Monorepo scaffolded with Turborepo. GitHub repo and GitFlow branches in place.
-GCP project configured: Artifact Registry, Workload Identity, Secret Manager.
-CT account set up. Upstash Redis provisioned. NestJS API and Next.js web apps
-scaffolded with Dockerfiles and shared packages created. CI/CD pipelines committed.
-No B2C features implemented yet.
+GitHub repository created (private) with GitFlow branches (main, develop) pushed.
+AGENT_CONTEXT.md bootstrapped. No code scaffolding, GCP setup, or CT configuration
+has been done yet — those are subsequent tasks.
+Project is at the very beginning: empty repo with only this context file.
 
 ## Completed Work
 
 ### ✅ Local Dev Foundation
-- [ ] GitHub repo, GitFlow branches (main, develop), branch protection, environments
+- [x] GitHub repo, GitFlow branches (main, develop) created and pushed
 - [ ] CT account, project key, and API credentials created
 - [ ] CT sample data seeded (products, categories, tax category, shipping)
 - [ ] docker-compose.yml created (api + web + redis containers)
@@ -35,7 +34,19 @@ No B2C features implemented yet.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Nothing yet.
+Task 0a complete. Next agent session should pick up Task 0b (CT account/project setup)
+or Task 0c (docker-compose + env files) or Task 1 (Turborepo scaffold) depending on
+the agent task execution order in the prompt.
+
+**Note:** Branch protection rules and GitHub environments (staging/production) require
+manual configuration in GitHub Settings → Branches / Environments, or via the GitHub
+API. The `gh` CLI v2.4.0 on this machine does not support `gh api` branch protection
+setup easily. The next agent or the developer should configure:
+- **main**: Require PR + 1 approval + CI status checks, no direct push, no force push
+- **develop**: Require PR + CI status checks, no direct push
+- **release/\***: Require PR + CI status checks
+- **hotfix/\***: Require PR + CI status checks
+- **Environments**: staging (auto-deploy from develop), production (manual approval from main)
 
 ## Pending / Backlog
 
