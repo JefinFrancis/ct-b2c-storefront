@@ -1,16 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 4 / Task 1 (Turborepo monorepo scaffold)
+2026-02-17 — Agent Session 5 / Task 2 (Feature 1: Products API + PLP wiring)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API (CT module, Redis module, health endpoint, products/cart/auth/orders/customers
-modules), Next.js web (api-client, pages, Tailwind), and shared packages (types, config,
-eslint-config). Dockerfiles and local dev infrastructure ready.
+NestJS API and Next.js web. Feature 1 (Products API + PLP) is now wired — products
+service fetches from CT SDK with Redis cache-aside pattern (5-min TTL), ProductCard
+and Pagination components created, PLP page fetches from API with pagination support.
 
 ## Completed Work
 
@@ -38,6 +38,16 @@ eslint-config). Dockerfiles and local dev infrastructure ready.
 - [x] packages/eslint-config: base, next, nest presets
 - [x] npm install + turbo build successful (5/5 tasks)
 
+### ✅ Feature 1: Products API + PLP wiring (Task 2)
+- [x] products.service.ts: CT SDK integration with Redis cache-aside (5-min TTL)
+- [x] products.controller.ts: GET /products (paginated, filterable, searchable)
+- [x] products.controller.ts: GET /products/:slug (single product by slug)
+- [x] ProductCard component: displays product image, name, price
+- [x] Pagination component: server-side pagination with URL query params
+- [x] PLP page: fetches from API, displays ProductCard grid with pagination
+- [x] api-client.ts: updated productsApi.list() with search param support
+- [x] turbo build successful (5/5 tasks)
+
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
 - [ ] GCP project created, APIs enabled
@@ -49,9 +59,9 @@ eslint-config). Dockerfiles and local dev infrastructure ready.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 1 complete. Branch `chore/monorepo-scaffold` ready to push and PR → develop.
-Branch `chore/local-dev` has been merged into develop.
-Next agent session should pick up Task 2 (Feature 1: Products API + PLP wiring).
+Task 2 (Feature 1) complete. Branch `feature/CT-001-products` ready to push and PR → develop.
+Branches `chore/local-dev` and `chore/monorepo-scaffold` have been merged into develop.
+Next agent session should pick up Task 3 (Feature 2: PDP wiring).
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -76,7 +86,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 
 ### Local development (work on these now)
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
-2. Feature 1: Products API + PLP wiring (connect to actual CT data)
+2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2
 3. Feature 2: PDP wiring
 4. Feature 3: Cart API + Cart UI wiring
 5. Feature 4: Auth API + Auth UI wiring

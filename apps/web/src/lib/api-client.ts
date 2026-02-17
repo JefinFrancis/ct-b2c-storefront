@@ -41,11 +41,12 @@ async function apiFetch<T>(
 }
 
 export const productsApi = {
-  list: (p?: { limit?: number; offset?: number; category?: string }) => {
+  list: (p?: { limit?: number; offset?: number; category?: string; search?: string }) => {
     const params = new URLSearchParams();
     if (p?.limit) params.set("limit", String(p.limit));
-    if (p?.offset) params.set("offset", String(p.offset));
+    if (p?.offset !== undefined) params.set("offset", String(p.offset));
     if (p?.category) params.set("category", p.category);
+    if (p?.search) params.set("search", p.search);
     const query = params.toString();
     return apiFetch<{ results: Product[]; total: number }>(
       `/products${query ? `?${query}` : ""}`,
