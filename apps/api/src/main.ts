@@ -11,8 +11,10 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
-  // Global API prefix
-  app.setGlobalPrefix("api/v1");
+  // Global API prefix (excluding health endpoint for Cloud Run)
+  app.setGlobalPrefix("api/v1", {
+    exclude: ["health"],
+  });
 
   // Global validation pipe
   app.useGlobalPipes(
