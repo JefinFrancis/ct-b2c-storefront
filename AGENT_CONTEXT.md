@@ -1,16 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 5 / Task 2 (Feature 1: Products API + PLP wiring)
+2026-02-17 — Agent Session 6 / Task 3 (Feature 2: PDP wiring)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API and Next.js web. Feature 1 (Products API + PLP) is now wired — products
-service fetches from CT SDK with Redis cache-aside pattern (5-min TTL), ProductCard
-and Pagination components created, PLP page fetches from API with pagination support.
+NestJS API and Next.js web. Feature 1 (Products API + PLP) wired. Feature 2 (PDP)
+now complete — Product Detail Page fetches from API, displays images, variants, and
+Add to Cart functionality with localStorage cart persistence.
 
 ## Completed Work
 
@@ -48,6 +48,16 @@ and Pagination components created, PLP page fetches from API with pagination sup
 - [x] api-client.ts: updated productsApi.list() with search param support
 - [x] turbo build successful (5/5 tasks)
 
+### ✅ Feature 2: PDP wiring (Task 3)
+- [x] ImageGallery component: main image + thumbnails, zoom on hover
+- [x] VariantSelector component: displays variant attributes, shows availability
+- [x] AddToCartButton component: creates cart if needed, adds item, shows feedback
+- [x] ProductDetails component: client component wrapper for variant state management
+- [x] PDP page (Server Component): fetches product, SEO metadata, breadcrumbs
+- [x] localStorage cart ID persistence (CartContext will replace this later)
+- [x] Component barrel exports updated
+- [x] TypeScript type check passes
+
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
 - [ ] GCP project created, APIs enabled
@@ -59,9 +69,9 @@ and Pagination components created, PLP page fetches from API with pagination sup
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 2 (Feature 1) complete. Branch `feature/CT-001-products` ready to push and PR → develop.
-Branches `chore/local-dev` and `chore/monorepo-scaffold` have been merged into develop.
-Next agent session should pick up Task 3 (Feature 2: PDP wiring).
+Task 3 (Feature 2: PDP) complete. Branch `feature/CT-002-pdp` ready to push and PR → develop.
+Feature 1 branch merged into this branch to get ProductCard and Pagination components.
+Next agent session should pick up Task 4 (Feature 3: Cart API + Cart UI wiring).
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -87,7 +97,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 ### Local development (work on these now)
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
 2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2
-3. Feature 2: PDP wiring
+3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3
 4. Feature 3: Cart API + Cart UI wiring
 5. Feature 4: Auth API + Auth UI wiring
 6. Feature 5: Checkout API + Checkout UI
