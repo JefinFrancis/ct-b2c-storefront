@@ -1,0 +1,21 @@
+# Env files — never commit these
+**/.env.local
+**/.env.*.local
+scripts/.env
+
+# Docker overrides
+docker-compose.override.yml
+
+# Turborepo cache
+.turbo
+
+# Build outputs
+apps/api/dist
+apps/web/.next
+
+# Node modules
+**/node_modules
+
+# OS files
+.DS_Store
+Thumbs.db
