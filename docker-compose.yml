@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+
+  # ── Redis (local container — replaced by Upstash in staging/prod) ─────────
+  redis:
+    image: redis:7-alpine
+    container_name: ct-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── NestJS API ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: builder            # builder stage has devDeps + hot reload support
+    container_name: ct-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./apps/api/.env.local
+    environment:
+      NODE_ENV: development
+      PORT: "8080"
+      REDIS_URL: redis://redis:6379    # Docker service name, not localhost
+    volumes:
+      - ./apps/api/src:/app/src        # Hot reload — changes reflect immediately
+      - ./packages:/packages           # Shared packages available in container
+      - /app/node_modules              # Prevent host node_modules override
+    command: npm run start:dev
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── Next.js Web ─────────────────────────────────────────────────────────
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: builder            # builder stage for dev
+    container_name: ct-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./apps/web/.env.local
+    environment:
+      NODE_ENV: development
+      # Server-side fetch uses Docker service name (internal network)
+      INTERNAL_API_URL: http://api:8080
+      # Browser-side fetch uses localhost (external)
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./apps/web/src:/app/src
+      - ./packages:/packages
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  redis-data:
+
+networks:
+  default:
+    name: ct-b2c-network
