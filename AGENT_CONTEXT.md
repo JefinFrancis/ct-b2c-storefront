@@ -1,16 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 4 / Task 1 (Turborepo monorepo scaffold)
+2026-02-17 — Agent Session 8 / Task 5.1 (Added Unit Testing Requirements)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API (CT module, Redis module, health endpoint, products/cart/auth/orders/customers
-modules), Next.js web (api-client, pages, Tailwind), and shared packages (types, config,
-eslint-config). Dockerfiles and local dev infrastructure ready.
+NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
+**Unit testing is now mandatory for all features** — existing features need tests
+added (marked as pending), all new features must include tests.
 
 ## Completed Work
 
@@ -38,6 +38,75 @@ eslint-config). Dockerfiles and local dev infrastructure ready.
 - [x] packages/eslint-config: base, next, nest presets
 - [x] npm install + turbo build successful (5/5 tasks)
 
+### ✅ Feature 1: Products API + PLP wiring (Task 2)
+- [x] products.service.ts: CT SDK integration with Redis cache-aside (5-min TTL)
+- [x] products.controller.ts: GET /products (paginated, filterable, searchable)
+- [x] products.controller.ts: GET /products/:slug (single product by slug)
+- [x] ProductCard component: displays product image, name, price
+- [x] Pagination component: server-side pagination with URL query params
+- [x] PLP page: fetches from API, displays ProductCard grid with pagination
+- [x] api-client.ts: updated productsApi.list() with search param support
+- [x] turbo build successful (5/5 tasks)
+
+### ✅ Feature 2: PDP wiring (Task 3)
+- [x] ImageGallery component: main image + thumbnails, zoom on hover
+- [x] VariantSelector component: displays variant attributes, shows availability
+- [x] AddToCartButton component: creates cart if needed, adds item, shows feedback
+- [x] ProductDetails component: client component wrapper for variant state management
+- [x] PDP page (Server Component): fetches product, SEO metadata, breadcrumbs
+- [x] localStorage cart ID persistence (CartContext will replace this later)
+- [x] Component barrel exports updated
+- [x] TypeScript type check passes
+
+### ✅ Feature 3: Cart API + Cart UI wiring (Task 4)
+- [x] cart.service.ts: Redis session storage (30-day TTL, session:{id} → cartId)
+- [x] cart.service.ts: getOrCreateCartForSession() method for session-based cart
+- [x] cart.controller.ts: GET /cart/session/current endpoint with X-Session-Id header
+- [x] cart.module.ts: RedisModule imported for session storage
+- [x] api-client.ts: sessionId option in apiFetch, getSessionCart method
+- [x] CartContext: React context with cart state, addItem, updateQuantity, removeItem
+- [x] CartContext: UUID v4 session ID generation, localStorage persistence
+- [x] MiniCart component: dropdown with item preview, remove, subtotal, cart link
+- [x] Cart page: full UI with quantity controls, order summary, responsive design
+- [x] Store layout: CartProvider wrapper, MiniCart replaces static Cart link
+- [x] AddToCartButton: refactored to use CartContext instead of localStorage
+- [x] TypeScript type check passes (both api and web)
+
+### ✅ Feature 4: Auth API + Auth UI wiring (Task 5)
+- [x] auth.service.ts: CT password flow for login, customers.post for registration
+- [x] auth.service.ts: getMe() fetches customer by ID, verifyToken() for JWT validation
+- [x] auth.controller.ts: POST /auth/login, POST /auth/register, GET /auth/me (protected)
+- [x] JwtStrategy: extracts customerId from JWT, attaches to request.user
+- [x] JwtAuthGuard: protects routes requiring authentication
+- [x] api-client.ts: authApi.getMe(token) method added
+- [x] AuthContext: React context with login, register, logout, customer state
+- [x] AuthContext: JWT stored in localStorage + cookie (for middleware)
+- [x] Login page: form validation, error handling, redirect param support
+- [x] Register page: form validation, password confirmation, auto-login after register
+- [x] middleware.ts: protects /account/orders, /account/profile, /account/addresses, /checkout
+- [x] UserMenu component: dropdown showing customer name, logout, account links
+- [x] Store layout: AuthProvider wraps CartProvider
+- [x] TypeScript type check passes (both api and web)
+
+### 🧪 Unit Testing Status
+> **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
+
+| Feature | API Tests | Web Tests | Status |
+|---------|-----------|-----------|--------|
+| Feature 1: Products API + PLP | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 2: PDP | N/A | ⏳ Pending | Needs tests |
+| Feature 3: Cart API + UI | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 4: Auth API + UI | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 5: Checkout (future) | - | - | Will include tests |
+| Feature 6: Orders (future) | - | - | Will include tests |
+
+**Test Infrastructure:**
+- NestJS (apps/api): Jest configured via `@nestjs/testing`
+- Next.js (apps/web): Vitest + @testing-library/react
+- Run all tests: `npm run test`
+- Run API tests: `npx turbo test --filter=api`
+- Run Web tests: `npx turbo test --filter=web`
+
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
 - [ ] GCP project created, APIs enabled
@@ -49,9 +118,15 @@ eslint-config). Dockerfiles and local dev infrastructure ready.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 1 complete. Branch `chore/monorepo-scaffold` ready to push and PR → develop.
-Branch `chore/local-dev` has been merged into develop.
-Next agent session should pick up Task 2 (Feature 1: Products API + PLP wiring).
+Task 5 (Feature 4: Auth) complete. Branch `feature/CT-004-auth` ready to push and PR → develop.
+Feature 3 branch merged into this branch for continuity.
+
+**Unit testing requirement added** — all features must now include unit tests.
+Existing features (1-4) need tests added as separate tasks.
+
+Next agent session should pick up:
+1. Add unit tests for existing features (Task 5.5: Unit Tests)
+2. Then continue with Task 6 (Feature 5: Checkout API + Checkout UI)
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -76,12 +151,13 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 
 ### Local development (work on these now)
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
-2. Feature 1: Products API + PLP wiring (connect to actual CT data)
-3. Feature 2: PDP wiring
-4. Feature 3: Cart API + Cart UI wiring
-5. Feature 4: Auth API + Auth UI wiring
-6. Feature 5: Checkout API + Checkout UI
-7. Feature 6: Orders API + Order History
+2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2 (tests pending)
+3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3 (tests pending)
+4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4 (tests pending)
+5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5 (tests pending)
+6. **Task 5.5: Add unit tests for Features 1-4** ⭐ HIGH PRIORITY
+7. Feature 5: Checkout API + Checkout UI (with tests)
+8. Feature 6: Orders API + Order History (with tests)
 
 ### Production (do these when ready to go live)
 8. GitHub Actions CI/CD pipelines
@@ -97,6 +173,12 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - CT SDK exclusively in apps/api — credentials never reach browser or web service
 - docker-compose for local dev — api + web + redis all containerised, no cloud deps
 - Redis is environment-aware — ioredis (local container) vs Upstash (staging/prod)
+- Session-based cart: X-Session-Id header, Redis session:{id}→cartId mapping (30-day TTL)
+- JWT auth: 7-day expiry, stored in localStorage (API calls) + cookie (middleware)
+- CT password flow for login validation — getCustomerApiRoot(email, password)
+- Next.js middleware protects /account/*, /checkout/* routes server-side
+- AuthContext handles client-side auth state; redirects handled on mount
+- **Unit testing mandatory**: Jest for NestJS, Vitest for Next.js, tests required for all features
 - Next.js api-client uses dual URL — INTERNAL_API_URL for server, NEXT_PUBLIC_API_URL for browser
 - Next.js output:standalone — required for Docker multi-stage production builds
 - GCP fully deferred — codebase runs 100% locally before any cloud config is needed

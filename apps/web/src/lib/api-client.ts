@@ -19,7 +19,7 @@ const getApiBase = () => {
 
 async function apiFetch<T>(
   path: string,
-  options?: RequestInit & { token?: string },
+  options?: RequestInit & { token?: string; sessionId?: string },
 ): Promise<T> {
   const url = `${getApiBase()}/api/v1${path}`;
 
@@ -28,6 +28,7 @@ async function apiFetch<T>(
     headers: {
       "Content-Type": "application/json",
       ...(options?.token ? { Authorization: `Bearer ${options.token}` } : {}),
+      ...(options?.sessionId ? { "X-Session-Id": options.sessionId } : {}),
       ...options?.headers,
     },
   });
@@ -41,11 +42,12 @@ async function apiFetch<T>(
 }
 
 export const productsApi = {
-  list: (p?: { limit?: number; offset?: number; category?: string }) => {
+  list: (p?: { limit?: number; offset?: number; category?: string; search?: string }) => {
     const params = new URLSearchParams();
     if (p?.limit) params.set("limit", String(p.limit));
-    if (p?.offset) params.set("offset", String(p.offset));
+    if (p?.offset !== undefined) params.set("offset", String(p.offset));
     if (p?.category) params.set("category", p.category);
+    if (p?.search) params.set("search", p.search);
     const query = params.toString();
     return apiFetch<{ results: Product[]; total: number }>(
       `/products${query ? `?${query}` : ""}`,
@@ -56,7 +58,10 @@ export const productsApi = {
 
 export const cartApi = {
   get: (id: string) => apiFetch<Cart>(`/cart/${id}`),
-  create: () => apiFetch<Cart>(`/cart`, { method: "POST" }),
+  create: (sessionId?: string) =>
+    apiFetch<Cart>(`/cart`, { method: "POST", sessionId }),
+  getSessionCart: (sessionId: string) =>
+    apiFetch<Cart>(`/cart/session/current`, { sessionId }),
   addItem: (
     id: string,
     body: { productId: string; variantId: number; quantity: number },
@@ -90,6 +95,8 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  getMe: (token: string) =>
+    apiFetch<Customer>(`/auth/me`, { token }),
 };
 
 export const ordersApi = {

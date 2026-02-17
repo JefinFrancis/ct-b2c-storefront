@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   output: "standalone", // Required for Docker multi-stage
   outputFileTracingRoot: join(__dirname, "../../"),
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "**.commercetools.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "**.commercetools.com" },
+      { protocol: "https", hostname: "storage.googleapis.com" },
+    ],
   },
 };
 

@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   # ── Redis (local container — replaced by Upstash in staging/prod) ─────────
@@ -7,7 +5,7 @@ services:
     image: redis:7-alpine
     container_name: ct-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"                    # Use 6380 to avoid conflicts with other Redis
     volumes:
       - redis-data:/data
     healthcheck:
@@ -18,11 +16,9 @@ services:
 
   # ── NestJS API ──────────────────────────────────────────────────────────
   api:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-      target: builder            # builder stage has devDeps + hot reload support
+    image: node:20
     container_name: ct-api
+    working_dir: /app
     ports:
       - "8080:8080"
     env_file:
@@ -30,12 +26,10 @@ services:
     environment:
       NODE_ENV: development
       PORT: "8080"
-      REDIS_URL: redis://redis:6379    # Docker service name, not localhost
+      REDIS_URL: redis://redis:6379    # Internal Docker network (container port)
     volumes:
-      - ./apps/api/src:/app/src        # Hot reload — changes reflect immediately
-      - ./packages:/packages           # Shared packages available in container
-      - /app/node_modules              # Prevent host node_modules override
-    command: npm run start:dev
+      - .:/app                         # Mount entire monorepo (including host node_modules)
+    command: sh -c "cd apps/api && rm -f tsconfig.tsbuildinfo && npx nest build && npx nest start --watch"
     depends_on:
       redis:
         condition: service_healthy
@@ -44,17 +38,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   # ── Next.js Web ─────────────────────────────────────────────────────────
   web:
-    build:
-      context: ./apps/web
-      dockerfile: Dockerfile
-      target: builder            # builder stage for dev
+    image: node:20
     container_name: ct-web
+    working_dir: /app
     ports:
-      - "3000:3000"
+      - "3001:3000"                    # Use 3001 to avoid conflicts
     env_file:
       - ./apps/web/.env.local
     environment:
@@ -65,11 +57,8 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:8080
       REDIS_URL: redis://redis:6379
     volumes:
-      - ./apps/web/src:/app/src
-      - ./packages:/packages
-      - /app/node_modules
-      - /app/.next
-    command: npm run dev
+      - .:/app                         # Mount entire monorepo (including host node_modules)
+    command: npm run dev --workspace=web
     depends_on:
       api:
         condition: service_healthy
