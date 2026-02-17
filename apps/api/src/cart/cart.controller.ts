@@ -6,6 +6,8 @@ import {
   Delete,
   Param,
   Body,
+  Headers,
+  BadRequestException,
 } from "@nestjs/common";
 import { CartService } from "./cart.service";
 
@@ -13,14 +15,38 @@ import { CartService } from "./cart.service";
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
+  /**
+   * Create a new cart. If X-Session-Id header is provided, associate cart with session.
+   */
   @Post()
-  create() {
-    return this.cartService.create();
+  async create(@Headers("x-session-id") sessionId?: string) {
+    const cart = await this.cartService.create();
+
+    // Associate cart with session if provided
+    if (sessionId) {
+      await this.cartService.setCartIdForSession(sessionId, cart.id);
+    }
+
+    return cart;
   }
 
+  /**
+   * Get cart by ID.
+   */
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.cartService.findById(id);
+  }
+
+  /**
+   * Get or create cart for session. Requires X-Session-Id header.
+   */
+  @Get("session/current")
+  async getSessionCart(@Headers("x-session-id") sessionId?: string) {
+    if (!sessionId) {
+      throw new BadRequestException("X-Session-Id header is required");
+    }
+    return this.cartService.getOrCreateCartForSession(sessionId);
   }
 
   @Post(":id/items")

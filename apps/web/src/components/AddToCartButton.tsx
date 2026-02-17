@@ -1,11 +1,11 @@
 /**
  * AddToCartButton — client component that handles adding products to cart.
- * Creates a cart if none exists, stores cartId in localStorage.
+ * Uses CartContext for cart state management.
  */
 "use client";
 
 import { useState, useCallback } from "react";
-import { cartApi } from "@/lib/api-client";
+import { useCart } from "@/contexts/CartContext";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -14,30 +14,13 @@ interface AddToCartButtonProps {
   className?: string;
 }
 
-const CART_ID_KEY = "ct_cart_id";
-
-/**
- * Get cart ID from localStorage.
- */
-function getStoredCartId(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(CART_ID_KEY);
-}
-
-/**
- * Store cart ID in localStorage.
- */
-function setStoredCartId(cartId: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(CART_ID_KEY, cartId);
-}
-
 export default function AddToCartButton({
   productId,
   variantId,
   disabled = false,
   className = "",
 }: AddToCartButtonProps) {
+  const { addItem, cart, isLoading: cartLoading } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
@@ -45,28 +28,19 @@ export default function AddToCartButton({
   } | null>(null);
 
   const handleAddToCart = useCallback(async () => {
-    if (disabled || isLoading) return;
+    if (disabled || isLoading || cartLoading) return;
 
     setIsLoading(true);
     setFeedback(null);
 
     try {
-      // Get or create cart
-      let cartId = getStoredCartId();
-
-      if (!cartId) {
-        // Create new cart
-        const newCart = await cartApi.create();
-        cartId = newCart.id;
-        setStoredCartId(cartId);
+      // Wait for cart to be ready if not yet initialized
+      if (!cart) {
+        // Cart context will handle cart creation
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
-      // Add item to cart
-      await cartApi.addItem(cartId, {
-        productId,
-        variantId,
-        quantity: 1,
-      });
+      await addItem(productId, variantId, 1);
 
       setFeedback({
         type: "success",
@@ -78,33 +52,6 @@ export default function AddToCartButton({
     } catch (error) {
       console.error("Failed to add to cart:", error);
 
-      // If cart not found, try creating a new one
-      if (
-        error instanceof Error &&
-        error.message.includes("Cart not found")
-      ) {
-        try {
-          const newCart = await cartApi.create();
-          setStoredCartId(newCart.id);
-
-          await cartApi.addItem(newCart.id, {
-            productId,
-            variantId,
-            quantity: 1,
-          });
-
-          setFeedback({
-            type: "success",
-            message: "Added to cart!",
-          });
-
-          setTimeout(() => setFeedback(null), 3000);
-          return;
-        } catch (retryError) {
-          console.error("Failed to create cart and add item:", retryError);
-        }
-      }
-
       setFeedback({
         type: "error",
         message: error instanceof Error ? error.message : "Failed to add to cart",
@@ -115,7 +62,7 @@ export default function AddToCartButton({
     } finally {
       setIsLoading(false);
     }
-  }, [productId, variantId, disabled, isLoading]);
+  }, [productId, variantId, disabled, isLoading, cartLoading, cart, addItem]);
 
   const baseClasses =
     "w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2";

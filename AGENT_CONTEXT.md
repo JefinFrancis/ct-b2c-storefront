@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 6 / Task 3 (Feature 2: PDP wiring)
+2026-02-17 — Agent Session 7 / Task 4 (Feature 3: Cart API + Cart UI wiring)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
@@ -9,8 +9,9 @@ commercetools project (c-spire-oe-demo, US region) is configured with an Admin A
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
 NestJS API and Next.js web. Feature 1 (Products API + PLP) wired. Feature 2 (PDP)
-now complete — Product Detail Page fetches from API, displays images, variants, and
-Add to Cart functionality with localStorage cart persistence.
+complete. Feature 3 (Cart API + Cart UI) now complete — cart service wired to CT SDK
+with Redis session storage (30-day TTL), CartContext manages cart state, MiniCart
+dropdown in header, full cart page with quantity controls and order summary.
 
 ## Completed Work
 
@@ -58,6 +59,20 @@ Add to Cart functionality with localStorage cart persistence.
 - [x] Component barrel exports updated
 - [x] TypeScript type check passes
 
+### ✅ Feature 3: Cart API + Cart UI wiring (Task 4)
+- [x] cart.service.ts: Redis session storage (30-day TTL, session:{id} → cartId)
+- [x] cart.service.ts: getOrCreateCartForSession() method for session-based cart
+- [x] cart.controller.ts: GET /cart/session/current endpoint with X-Session-Id header
+- [x] cart.module.ts: RedisModule imported for session storage
+- [x] api-client.ts: sessionId option in apiFetch, getSessionCart method
+- [x] CartContext: React context with cart state, addItem, updateQuantity, removeItem
+- [x] CartContext: UUID v4 session ID generation, localStorage persistence
+- [x] MiniCart component: dropdown with item preview, remove, subtotal, cart link
+- [x] Cart page: full UI with quantity controls, order summary, responsive design
+- [x] Store layout: CartProvider wrapper, MiniCart replaces static Cart link
+- [x] AddToCartButton: refactored to use CartContext instead of localStorage
+- [x] TypeScript type check passes (both api and web)
+
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
 - [ ] GCP project created, APIs enabled
@@ -69,9 +84,9 @@ Add to Cart functionality with localStorage cart persistence.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 3 (Feature 2: PDP) complete. Branch `feature/CT-002-pdp` ready to push and PR → develop.
-Feature 1 branch merged into this branch to get ProductCard and Pagination components.
-Next agent session should pick up Task 4 (Feature 3: Cart API + Cart UI wiring).
+Task 4 (Feature 3: Cart) complete. Branch `feature/CT-003-cart` ready to push and PR → develop.
+Feature 2 branch merged into this branch for continuity.
+Next agent session should pick up Task 5 (Feature 4: Auth API + Auth UI wiring).
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -98,7 +113,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
 2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2
 3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3
-4. Feature 3: Cart API + Cart UI wiring
+4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4
 5. Feature 4: Auth API + Auth UI wiring
 6. Feature 5: Checkout API + Checkout UI
 7. Feature 6: Orders API + Order History
@@ -117,6 +132,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - CT SDK exclusively in apps/api — credentials never reach browser or web service
 - docker-compose for local dev — api + web + redis all containerised, no cloud deps
 - Redis is environment-aware — ioredis (local container) vs Upstash (staging/prod)
+- Session-based cart: X-Session-Id header, Redis session:{id}→cartId mapping (30-day TTL)
 - Next.js api-client uses dual URL — INTERNAL_API_URL for server, NEXT_PUBLIC_API_URL for browser
 - Next.js output:standalone — required for Docker multi-stage production builds
 - GCP fully deferred — codebase runs 100% locally before any cloud config is needed
