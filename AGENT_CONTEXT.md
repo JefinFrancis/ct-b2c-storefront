@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 1 / Task 0a
+2026-02-17 — Agent Session 1 / Task 0a (branch protection attempt)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
@@ -38,15 +38,24 @@ Task 0a complete. Next agent session should pick up Task 0b (CT account/project 
 or Task 0c (docker-compose + env files) or Task 1 (Turborepo scaffold) depending on
 the agent task execution order in the prompt.
 
-**Note:** Branch protection rules and GitHub environments (staging/production) require
-manual configuration in GitHub Settings → Branches / Environments, or via the GitHub
-API. The `gh` CLI v2.4.0 on this machine does not support `gh api` branch protection
-setup easily. The next agent or the developer should configure:
+### GitHub Environments — Created ✅
+- **staging** — created (no protection rules, auto-deploy)
+- **production** — created (no reviewers applied — see blocker below)
+
+### ⚠️ Branch Protection — BLOCKED (GitHub Free plan, private repo)
+Branch protection rules AND repository rulesets both require **GitHub Pro** (or a
+public repo). `gh` CLI v2.86.0 was used but the API returns HTTP 403.
+
+**Action required** — do ONE of the following, then apply these rules:
+1. Upgrade to GitHub Pro ($4/mo at github.com/settings/billing), OR
+2. Make the repo public (Settings → Danger Zone → Change visibility)
+
+Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - **main**: Require PR + 1 approval + CI status checks, no direct push, no force push
 - **develop**: Require PR + CI status checks, no direct push
 - **release/\***: Require PR + CI status checks
 - **hotfix/\***: Require PR + CI status checks
-- **Environments**: staging (auto-deploy from develop), production (manual approval from main)
+- **production env**: Add JefinFrancis as required reviewer, restrict to main branch
 
 ## Pending / Backlog
 
