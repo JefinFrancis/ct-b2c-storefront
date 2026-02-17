@@ -1,16 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 2 / Task 0b (CT account setup & sample data seeding)
+2026-02-17 — Agent Session 3 / Task 0c (docker-compose + env files + README)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
-client. Sample data seeded: 42 categories (29 demo + 13 fashion), 127 products
-(117 demo + 10 fashion), 4 product types, 1 tax category, 2 zones, 2 shipping methods.
-Seed script is additive and idempotent — checks each entity by key. `.gitignore` is
-in place. No code scaffolding, GCP setup, or local dev docker-compose has been done
-yet — those are subsequent tasks.
+client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
+category, 2 zones, 2 shipping methods. Local dev infrastructure is ready:
+docker-compose.yml (api + web + redis), per-package .env.example files, and README
+with developer onboarding docs. No code scaffolding yet — Turborepo monorepo,
+NestJS API, and Next.js web are subsequent tasks.
 
 ## Completed Work
 
@@ -20,8 +20,9 @@ yet — those are subsequent tasks.
 - [x] CT sample data seeded (products, categories, tax category, shipping)
 - [x] .gitignore configured (env files, .turbo, dist, node_modules)
 - [x] Seed script created (scripts/seed.js) — idempotent, skips existing data
-- [ ] docker-compose.yml created (api + web + redis containers)
-- [ ] Per-package .env.example files created and committed
+- [x] docker-compose.yml created (api + web + redis containers)
+- [x] Per-package .env.example files created and committed
+- [x] README.md with architecture, getting started, developer commands
 
 - [ ] Turborepo monorepo scaffolded (apps/api, apps/web, packages/*)
 - [ ] NestJS API: CT module, Redis module (env-aware), health endpoint, Dockerfile
@@ -39,10 +40,9 @@ yet — those are subsequent tasks.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 0b complete. Next agent session should pick up Task 0c (docker-compose + env files)
-or Task 1 (Turborepo scaffold) depending on the agent task execution order in the prompt.
-
-Branch `chore/ct-setup` pushed to origin — ready for PR → develop.
+Task 0c complete. Branch `chore/local-dev` pushed to origin — ready for PR → develop.
+Branch `chore/ct-setup` has been merged into develop.
+Next agent session should pick up Task 1 (Turborepo monorepo scaffold).
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
