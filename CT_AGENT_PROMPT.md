@@ -7,7 +7,10 @@
 > **Before you write a single line of code, you MUST:**
 > 1. Read `AGENT_CONTEXT.md` in the project root.
 > 2. Understand the current state of the project (what's done, what's pending, known issues).
-> 3. After completing your work, **update `AGENT_CONTEXT.md`** to reflect what changed and what the next agent should know.
+> 3. After completing your work:
+>    - **Write unit tests** for all new services, controllers, and components.
+>    - **Run `npm run test`** to verify all tests pass.
+>    - **Update `AGENT_CONTEXT.md`** to reflect what changed and what the next agent should know.
 >
 > This file is the shared brain of the project. Neglecting it breaks continuity for every agent that follows you.
 
@@ -155,6 +158,7 @@
 ### Rules for all agents
 - **READ first, code second.** No exceptions.
 - **Scope your changes** — working on `api`? Do not touch `web` unless essential.
+- **Write unit tests for all new functionality.** Every service, controller, and component must have corresponding tests. See "Unit Testing Requirements" section.
 - **Every session ends** with an updated `AGENT_CONTEXT.md`.
 - Flag and resolve any conflict between `AGENT_CONTEXT.md` and actual code before proceeding.
 
@@ -281,6 +285,142 @@ git branch -d feature/CT-XXX-description
 - **Release**: bump `package.json` versions, update `CHANGELOG.md`, bug fixes only — merge to `main` (tag) AND back to `develop`
 - **Hotfix**: branch from `main`, fix, merge to `main` (tag patch) AND `develop`
 - **Tags**: every merge to `main` → `git tag -a v1.0.0 -m "Release v1.0.0"`
+
+---
+
+## 🧪 Unit Testing Requirements
+
+> **MANDATORY:** Every feature implementation MUST include unit tests. No exceptions.
+
+### Testing Stack
+| Package | NestJS (apps/api) | Next.js (apps/web) |
+|---------|-------------------|--------------------|
+| Test Runner | Jest | Vitest |
+| Mocking | `@nestjs/testing` | `vitest` mocks |
+| Components | N/A | `@testing-library/react` |
+| DOM | N/A | `@testing-library/jest-dom` |
+
+### What Must Be Tested
+
+#### API (NestJS)
+1. **Services** — all business logic methods
+   - Mock CT SDK responses
+   - Mock Redis operations
+   - Test error handling (CT errors, validation errors)
+   - Test happy path and edge cases
+
+2. **Controllers** — endpoint behavior
+   - Test request validation (DTOs)
+   - Test response structure
+   - Test guards (authentication)
+   - Test error responses (401, 403, 404, 500)
+
+3. **Guards & Strategies** — auth flows
+   - Test token validation
+   - Test guard activation
+
+#### Web (Next.js)
+1. **Components** — UI behavior
+   - Test rendering with different props
+   - Test user interactions (clicks, form inputs)
+   - Test loading/error/empty states
+   - Test conditional rendering
+
+2. **Contexts** — state management
+   - Test initial state
+   - Test state updates
+   - Test error handling
+
+3. **Utils/Helpers** — pure functions
+   - Test all input variations
+   - Test edge cases
+
+### Test File Locations
+```
+apps/api/src/
+├── auth/
+│   ├── auth.service.ts
+│   ├── auth.service.spec.ts      ← Service tests
+│   ├── auth.controller.ts
+│   └── auth.controller.spec.ts   ← Controller tests
+├── cart/
+│   ├── cart.service.ts
+│   ├── cart.service.spec.ts
+│   └── ...
+
+apps/web/src/
+├── components/
+│   ├── ProductCard.tsx
+│   ├── ProductCard.test.tsx      ← Component tests
+│   └── ...
+├── contexts/
+│   ├── CartContext.tsx
+│   ├── CartContext.test.tsx      ← Context tests
+│   └── ...
+```
+
+### Running Tests
+```bash
+# All tests
+npm run test
+
+# Specific package
+npx turbo test --filter=api
+npx turbo test --filter=web
+
+# Watch mode (during development)
+npm run test:watch --workspace=apps/api
+npm run test:watch --workspace=apps/web
+
+# Coverage
+npm run test:cov
+```
+
+### Test Naming Convention
+```typescript
+describe('AuthService', () => {
+  describe('login', () => {
+    it('should return token and customer on valid credentials', async () => {});
+    it('should throw UnauthorizedException on invalid password', async () => {});
+    it('should throw UnauthorizedException on non-existent email', async () => {});
+  });
+
+  describe('register', () => {
+    it('should create customer and return token', async () => {});
+    it('should throw ConflictException if email exists', async () => {});
+  });
+});
+```
+
+### Commit Convention for Tests
+```
+test(api/auth): add unit tests for AuthService login
+test(api/cart): add unit tests for CartService CRUD operations
+test(web/components): add tests for ProductCard rendering
+test(web/contexts): add tests for CartContext state management
+```
+
+### Agent Workflow (Updated with Testing)
+```bash
+# 1. Branch from develop
+git checkout develop && git pull origin develop
+git checkout -b feature/CT-XXX-description
+
+# 2. Implement feature with tests
+# - Write tests alongside implementation (TDD encouraged)
+# - Ensure all tests pass before committing
+
+# 3. Verify tests pass
+npm run test --workspace=apps/api   # or apps/web
+npx turbo typecheck
+
+# 4. Commit with conventional commits
+git commit -m "feat(api/auth): add login endpoint"
+git commit -m "test(api/auth): add unit tests for AuthService"
+
+# 5. Push and open PR
+git push origin feature/CT-XXX-description
+```
 
 ---
 

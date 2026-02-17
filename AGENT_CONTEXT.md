@@ -1,17 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 8 / Task 5 (Feature 4: Auth API + Auth UI wiring)
+2026-02-17 — Agent Session 8 / Task 5.1 (Added Unit Testing Requirements)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API and Next.js web. Features 1-3 complete (Products, PDP, Cart). Feature 4
-(Auth) now complete — auth service wired to CT customers API with JWT (7-day expiry),
-AuthContext manages auth state, login/register pages functional, middleware protects
-account routes, UserMenu shows customer name and logout.
+NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
+**Unit testing is now mandatory for all features** — existing features need tests
+added (marked as pending), all new features must include tests.
 
 ## Completed Work
 
@@ -89,6 +88,25 @@ account routes, UserMenu shows customer name and logout.
 - [x] Store layout: AuthProvider wraps CartProvider
 - [x] TypeScript type check passes (both api and web)
 
+### 🧪 Unit Testing Status
+> **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
+
+| Feature | API Tests | Web Tests | Status |
+|---------|-----------|-----------|--------|
+| Feature 1: Products API + PLP | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 2: PDP | N/A | ⏳ Pending | Needs tests |
+| Feature 3: Cart API + UI | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 4: Auth API + UI | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 5: Checkout (future) | - | - | Will include tests |
+| Feature 6: Orders (future) | - | - | Will include tests |
+
+**Test Infrastructure:**
+- NestJS (apps/api): Jest configured via `@nestjs/testing`
+- Next.js (apps/web): Vitest + @testing-library/react
+- Run all tests: `npm run test`
+- Run API tests: `npx turbo test --filter=api`
+- Run Web tests: `npx turbo test --filter=web`
+
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
 - [ ] GCP project created, APIs enabled
@@ -102,7 +120,13 @@ account routes, UserMenu shows customer name and logout.
 ## In Progress
 Task 5 (Feature 4: Auth) complete. Branch `feature/CT-004-auth` ready to push and PR → develop.
 Feature 3 branch merged into this branch for continuity.
-Next agent session should pick up Task 6 (Feature 5: Checkout API + Checkout UI).
+
+**Unit testing requirement added** — all features must now include unit tests.
+Existing features (1-4) need tests added as separate tasks.
+
+Next agent session should pick up:
+1. Add unit tests for existing features (Task 5.5: Unit Tests)
+2. Then continue with Task 6 (Feature 5: Checkout API + Checkout UI)
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -127,12 +151,13 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 
 ### Local development (work on these now)
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
-2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2
-3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3
-4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4
-5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5
-6. Feature 5: Checkout API + Checkout UI
-7. Feature 6: Orders API + Order History
+2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2 (tests pending)
+3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3 (tests pending)
+4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4 (tests pending)
+5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5 (tests pending)
+6. **Task 5.5: Add unit tests for Features 1-4** ⭐ HIGH PRIORITY
+7. Feature 5: Checkout API + Checkout UI (with tests)
+8. Feature 6: Orders API + Order History (with tests)
 
 ### Production (do these when ready to go live)
 8. GitHub Actions CI/CD pipelines
@@ -153,6 +178,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - CT password flow for login validation — getCustomerApiRoot(email, password)
 - Next.js middleware protects /account/*, /checkout/* routes server-side
 - AuthContext handles client-side auth state; redirects handled on mount
+- **Unit testing mandatory**: Jest for NestJS, Vitest for Next.js, tests required for all features
 - Next.js api-client uses dual URL — INTERNAL_API_URL for server, NEXT_PUBLIC_API_URL for browser
 - Next.js output:standalone — required for Docker multi-stage production builds
 - GCP fully deferred — codebase runs 100% locally before any cloud config is needed
