@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+.turbo
+out
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+coverage
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore

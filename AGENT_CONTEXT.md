@@ -1,16 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 3 / Task 0c (docker-compose + env files + README)
+2026-02-17 — Agent Session 4 / Task 1 (Turborepo monorepo scaffold)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
-category, 2 zones, 2 shipping methods. Local dev infrastructure is ready:
-docker-compose.yml (api + web + redis), per-package .env.example files, and README
-with developer onboarding docs. No code scaffolding yet — Turborepo monorepo,
-NestJS API, and Next.js web are subsequent tasks.
+category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
+NestJS API (CT module, Redis module, health endpoint, products/cart/auth/orders/customers
+modules), Next.js web (api-client, pages, Tailwind), and shared packages (types, config,
+eslint-config). Dockerfiles and local dev infrastructure ready.
 
 ## Completed Work
 
@@ -24,10 +24,19 @@ NestJS API, and Next.js web are subsequent tasks.
 - [x] Per-package .env.example files created and committed
 - [x] README.md with architecture, getting started, developer commands
 
-- [ ] Turborepo monorepo scaffolded (apps/api, apps/web, packages/*)
-- [ ] NestJS API: CT module, Redis module (env-aware), health endpoint, Dockerfile
-- [ ] Next.js web: api-client.ts (dual URL), Redis lib, Dockerfile, next.config.ts
-- [ ] packages/types, packages/config, packages/eslint-config created
+### ✅ Turborepo Monorepo Scaffold (Task 1)
+- [x] turbo.json + root package.json with npm workspaces
+- [x] tsconfig.base.json — shared TypeScript configuration
+- [x] apps/api (NestJS): CT module, Redis module (env-aware), health endpoint
+- [x] apps/api: products, cart, auth, orders, customers modules with controllers/services
+- [x] apps/api: Dockerfile (multi-stage), .dockerignore, nest-cli.json
+- [x] apps/web (Next.js): app router pages (/, /products, /cart, /account/*, /checkout)
+- [x] apps/web: api-client.ts (dual URL), redis.ts, Tailwind CSS
+- [x] apps/web: Dockerfile (multi-stage), .dockerignore, next.config.ts (standalone)
+- [x] packages/types: Product, Cart, Order, Customer, common types
+- [x] packages/config: env.ts (zod schemas), constants.ts
+- [x] packages/eslint-config: base, next, nest presets
+- [x] npm install + turbo build successful (5/5 tasks)
 
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
@@ -40,9 +49,9 @@ NestJS API, and Next.js web are subsequent tasks.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 0c complete. Branch `chore/local-dev` pushed to origin — ready for PR → develop.
-Branch `chore/ct-setup` has been merged into develop.
-Next agent session should pick up Task 1 (Turborepo monorepo scaffold).
+Task 1 complete. Branch `chore/monorepo-scaffold` ready to push and PR → develop.
+Branch `chore/local-dev` has been merged into develop.
+Next agent session should pick up Task 2 (Feature 1: Products API + PLP wiring).
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -66,11 +75,11 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 ## Pending / Backlog
 
 ### Local development (work on these now)
-1. packages/types — define all shared API contract types
-2. Feature 1: Products API + PLP
-3. Feature 2: PDP
-4. Feature 3: Cart API + Cart UI
-5. Feature 4: Auth API + Auth UI
+1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
+2. Feature 1: Products API + PLP wiring (connect to actual CT data)
+3. Feature 2: PDP wiring
+4. Feature 3: Cart API + Cart UI wiring
+5. Feature 4: Auth API + Auth UI wiring
 6. Feature 5: Checkout API + Checkout UI
 7. Feature 6: Orders API + Order History
 
@@ -116,6 +125,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - REDIS_URL=redis://localhost:6379 — local Redis (overridden to redis://redis:6379 by docker-compose)
 - ALLOWED_ORIGIN=http://localhost:3000
 - PORT=8080
+- JWT_SECRET=dev-secret-change-me-in-production — for auth token signing
 
 ### apps/api (staging/prod — via GCP Secret Manager, when ready)
 - Same CT vars above
