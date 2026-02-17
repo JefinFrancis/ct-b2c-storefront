@@ -6,10 +6,11 @@
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
-client and sample data already seeded (29 categories, 117 products, 3 product types,
-1 tax category, 2 zones, 2 shipping methods). A reusable seed script is committed
-in `scripts/seed.js`. `.gitignore` is in place. No code scaffolding, GCP setup, or
-local dev docker-compose has been done yet — those are subsequent tasks.
+client. Sample data seeded: 42 categories (29 demo + 13 fashion), 127 products
+(117 demo + 10 fashion), 4 product types, 1 tax category, 2 zones, 2 shipping methods.
+Seed script is additive and idempotent — checks each entity by key. `.gitignore` is
+in place. No code scaffolding, GCP setup, or local dev docker-compose has been done
+yet — those are subsequent tasks.
 
 ## Completed Work
 
@@ -98,6 +99,8 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 ## Known Issues / Watch-outs
 - CT productProjections.search() needs Search module enabled in Merchant Center
 - Admin API client (manage_project scope) used for seeding — app should use narrower scopes (view_products, manage_my_orders, etc.)
+- CT attribute names are globally unique across product types — 'size' must be ltext (not text) due to existing 'Furniture and decor' product type
+- CT project locale is en-US (not en) — all localized strings must use en-US key
 - CT mutations always need current `version` — always fetch before mutating
 - Anonymous → customer cart merge must happen at login via customers.login()
 - Turborepo: packages/* builds before apps/* — handled automatically via dependsOn in turbo.json
@@ -138,7 +141,10 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - API URL: https://api.us-central1.gcp.commercetools.com
 - API Client: ct-b2c-storefront (Admin scope: manage_project)
 - Scopes (for app .env): view_products:c-spire-oe-demo manage_my_orders:c-spire-oe-demo manage_my_profile:c-spire-oe-demo manage_my_payments:c-spire-oe-demo create_anonymous_token:c-spire-oe-demo
-- Seeded Data: 29 categories, 117 products, 3 product types, 1 tax category, 2 zones, 2 shipping methods
+- Seeded Data: 42 categories (29 demo + 13 fashion), 127 products (117 demo + 10 fashion), 4 product types, 1 tax category, 2 zones, 2 shipping methods
+- Locale: project uses en-GB, de-DE, en-US — seed data uses en-US
+- Demo data: furniture/home goods theme (CT sample project data, pre-existing)
+- Fashion data: clothing, accessories, footwear (our seed script)
 
 ## GCP Info
 - Project ID: ct-b2c-storefront
