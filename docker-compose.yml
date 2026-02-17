@@ -16,7 +16,7 @@ services:
 
   # ── NestJS API ──────────────────────────────────────────────────────────
   api:
-    image: node:20-alpine
+    image: node:20
     container_name: ct-api
     working_dir: /app
     ports:
@@ -29,7 +29,7 @@ services:
       REDIS_URL: redis://redis:6379    # Internal Docker network (container port)
     volumes:
       - .:/app                         # Mount entire monorepo (including host node_modules)
-    command: npm run dev --workspace=api
+    command: sh -c "cd apps/api && rm -f tsconfig.tsbuildinfo && npx nest build && npx nest start --watch"
     depends_on:
       redis:
         condition: service_healthy
@@ -42,7 +42,7 @@ services:
 
   # ── Next.js Web ─────────────────────────────────────────────────────────
   web:
-    image: node:20-alpine
+    image: node:20
     container_name: ct-web
     working_dir: /app
     ports:
