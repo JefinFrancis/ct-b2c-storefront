@@ -95,6 +95,8 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  getMe: (token: string) =>
+    apiFetch<Customer>(`/auth/me`, { token }),
 };
 
 export const ordersApi = {

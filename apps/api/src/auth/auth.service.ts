@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { CommercetoolsService } from "../commercetools/commercetools.service";
@@ -13,6 +14,13 @@ interface RegisterInput {
   lastName: string;
 }
 
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  iat?: number;
+  exp?: number;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,6 +28,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * Login existing customer using CT password flow.
+   * Returns customer data and JWT token.
+   */
   async login(email: string, password: string) {
     try {
       const api = this.ct.getCustomerApiRoot(email, password);
@@ -39,6 +51,10 @@ export class AuthService {
     }
   }
 
+  /**
+   * Register new customer and auto-login.
+   * Returns customer data and JWT token.
+   */
   async register(input: RegisterInput) {
     const api = this.ct.getApiRoot();
 
@@ -71,8 +87,36 @@ export class AuthService {
     }
   }
 
-  async validateToken(payload: { sub: string; email: string }) {
-    // Token payload contains customer ID and email
+  /**
+   * Get current customer by ID (from JWT payload).
+   */
+  async getMe(customerId: string) {
+    const api = this.ct.getApiRoot();
+
+    try {
+      const response = await api
+        .customers()
+        .withId({ ID: customerId })
+        .get()
+        .execute();
+
+      return response.body;
+    } catch {
+      throw new NotFoundException("Customer not found");
+    }
+  }
+
+  /**
+   * Validate JWT payload (called by JwtStrategy).
+   */
+  async validateToken(payload: JwtPayload) {
     return { id: payload.sub, email: payload.email };
+  }
+
+  /**
+   * Verify and decode a JWT token.
+   */
+  verifyToken(token: string): JwtPayload {
+    return this.jwtService.verify<JwtPayload>(token);
   }
 }

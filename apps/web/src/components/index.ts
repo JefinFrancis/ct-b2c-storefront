@@ -8,3 +8,4 @@ export { default as VariantSelector } from "./VariantSelector";
 export { default as AddToCartButton } from "./AddToCartButton";
 export { default as ProductDetails } from "./ProductDetails";
 export { default as MiniCart } from "./MiniCart";
+export { default as UserMenu } from "./UserMenu";

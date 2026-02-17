@@ -1,17 +1,17 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 7 / Task 4 (Feature 3: Cart API + Cart UI wiring)
+2026-02-17 — Agent Session 8 / Task 5 (Feature 4: Auth API + Auth UI wiring)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API and Next.js web. Feature 1 (Products API + PLP) wired. Feature 2 (PDP)
-complete. Feature 3 (Cart API + Cart UI) now complete — cart service wired to CT SDK
-with Redis session storage (30-day TTL), CartContext manages cart state, MiniCart
-dropdown in header, full cart page with quantity controls and order summary.
+NestJS API and Next.js web. Features 1-3 complete (Products, PDP, Cart). Feature 4
+(Auth) now complete — auth service wired to CT customers API with JWT (7-day expiry),
+AuthContext manages auth state, login/register pages functional, middleware protects
+account routes, UserMenu shows customer name and logout.
 
 ## Completed Work
 
@@ -73,6 +73,22 @@ dropdown in header, full cart page with quantity controls and order summary.
 - [x] AddToCartButton: refactored to use CartContext instead of localStorage
 - [x] TypeScript type check passes (both api and web)
 
+### ✅ Feature 4: Auth API + Auth UI wiring (Task 5)
+- [x] auth.service.ts: CT password flow for login, customers.post for registration
+- [x] auth.service.ts: getMe() fetches customer by ID, verifyToken() for JWT validation
+- [x] auth.controller.ts: POST /auth/login, POST /auth/register, GET /auth/me (protected)
+- [x] JwtStrategy: extracts customerId from JWT, attaches to request.user
+- [x] JwtAuthGuard: protects routes requiring authentication
+- [x] api-client.ts: authApi.getMe(token) method added
+- [x] AuthContext: React context with login, register, logout, customer state
+- [x] AuthContext: JWT stored in localStorage + cookie (for middleware)
+- [x] Login page: form validation, error handling, redirect param support
+- [x] Register page: form validation, password confirmation, auto-login after register
+- [x] middleware.ts: protects /account/orders, /account/profile, /account/addresses, /checkout
+- [x] UserMenu component: dropdown showing customer name, logout, account links
+- [x] Store layout: AuthProvider wraps CartProvider
+- [x] TypeScript type check passes (both api and web)
+
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
 - [ ] GCP project created, APIs enabled
@@ -84,9 +100,9 @@ dropdown in header, full cart page with quantity controls and order summary.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 4 (Feature 3: Cart) complete. Branch `feature/CT-003-cart` ready to push and PR → develop.
-Feature 2 branch merged into this branch for continuity.
-Next agent session should pick up Task 5 (Feature 4: Auth API + Auth UI wiring).
+Task 5 (Feature 4: Auth) complete. Branch `feature/CT-004-auth` ready to push and PR → develop.
+Feature 3 branch merged into this branch for continuity.
+Next agent session should pick up Task 6 (Feature 5: Checkout API + Checkout UI).
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -114,7 +130,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2
 3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3
 4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4
-5. Feature 4: Auth API + Auth UI wiring
+5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5
 6. Feature 5: Checkout API + Checkout UI
 7. Feature 6: Orders API + Order History
 
@@ -133,6 +149,10 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - docker-compose for local dev — api + web + redis all containerised, no cloud deps
 - Redis is environment-aware — ioredis (local container) vs Upstash (staging/prod)
 - Session-based cart: X-Session-Id header, Redis session:{id}→cartId mapping (30-day TTL)
+- JWT auth: 7-day expiry, stored in localStorage (API calls) + cookie (middleware)
+- CT password flow for login validation — getCustomerApiRoot(email, password)
+- Next.js middleware protects /account/*, /checkout/* routes server-side
+- AuthContext handles client-side auth state; redirects handled on mount
 - Next.js api-client uses dual URL — INTERNAL_API_URL for server, NEXT_PUBLIC_API_URL for browser
 - Next.js output:standalone — required for Docker multi-stage production builds
 - GCP fully deferred — codebase runs 100% locally before any cloud config is needed
