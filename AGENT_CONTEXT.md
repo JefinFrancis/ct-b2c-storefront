@@ -1,23 +1,27 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 1 / Task 0a (branch protection attempt)
+2026-02-17 — Agent Session 2 / Task 0b (CT account setup & sample data seeding)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
-AGENT_CONTEXT.md bootstrapped. No code scaffolding, GCP setup, or CT configuration
-has been done yet — those are subsequent tasks.
-Project is at the very beginning: empty repo with only this context file.
+commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
+client and sample data already seeded (29 categories, 117 products, 3 product types,
+1 tax category, 2 zones, 2 shipping methods). A reusable seed script is committed
+in `scripts/seed.js`. `.gitignore` is in place. No code scaffolding, GCP setup, or
+local dev docker-compose has been done yet — those are subsequent tasks.
 
 ## Completed Work
 
 ### ✅ Local Dev Foundation
 - [x] GitHub repo, GitFlow branches (main, develop) created and pushed
-- [ ] CT account, project key, and API credentials created
-- [ ] CT sample data seeded (products, categories, tax category, shipping)
+- [x] CT account, project key, and API credentials created
+- [x] CT sample data seeded (products, categories, tax category, shipping)
+- [x] .gitignore configured (env files, .turbo, dist, node_modules)
+- [x] Seed script created (scripts/seed.js) — idempotent, skips existing data
 - [ ] docker-compose.yml created (api + web + redis containers)
 - [ ] Per-package .env.example files created and committed
-- [ ] .gitignore configured (env files, .turbo, dist, node_modules)
+
 - [ ] Turborepo monorepo scaffolded (apps/api, apps/web, packages/*)
 - [ ] NestJS API: CT module, Redis module (env-aware), health endpoint, Dockerfile
 - [ ] Next.js web: api-client.ts (dual URL), Redis lib, Dockerfile, next.config.ts
@@ -34,9 +38,10 @@ Project is at the very beginning: empty repo with only this context file.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 0a complete. Next agent session should pick up Task 0b (CT account/project setup)
-or Task 0c (docker-compose + env files) or Task 1 (Turborepo scaffold) depending on
-the agent task execution order in the prompt.
+Task 0b complete. Next agent session should pick up Task 0c (docker-compose + env files)
+or Task 1 (Turborepo scaffold) depending on the agent task execution order in the prompt.
+
+Branch `chore/ct-setup` pushed to origin — ready for PR → develop.
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -92,6 +97,7 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 
 ## Known Issues / Watch-outs
 - CT productProjections.search() needs Search module enabled in Merchant Center
+- Admin API client (manage_project scope) used for seeding — app should use narrower scopes (view_products, manage_my_orders, etc.)
 - CT mutations always need current `version` — always fetch before mutating
 - Anonymous → customer cart merge must happen at login via customers.login()
 - Turborepo: packages/* builds before apps/* — handled automatically via dependsOn in turbo.json
@@ -126,10 +132,13 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - CDN IP:       <fill after CDN setup>
 
 ## CT Project Info
-- Region: <fill in>
-- Project Key: <fill in>
-- Auth URL: <fill in>
-- API URL: <fill in>
+- Region: us-central1.gcp (US)
+- Project Key: c-spire-oe-demo
+- Auth URL: https://auth.us-central1.gcp.commercetools.com
+- API URL: https://api.us-central1.gcp.commercetools.com
+- API Client: ct-b2c-storefront (Admin scope: manage_project)
+- Scopes (for app .env): view_products:c-spire-oe-demo manage_my_orders:c-spire-oe-demo manage_my_profile:c-spire-oe-demo manage_my_payments:c-spire-oe-demo create_anonymous_token:c-spire-oe-demo
+- Seeded Data: 29 categories, 117 products, 3 product types, 1 tax category, 2 zones, 2 shipping methods
 
 ## GCP Info
 - Project ID: ct-b2c-storefront
