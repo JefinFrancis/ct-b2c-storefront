@@ -64,9 +64,20 @@ async function seedTaxCategories() {
   log("💰", "Creating tax categories...");
 
   const existing = await api.taxCategories().get().execute();
+
+  // Try to find our specific tax category by key
+  const ours = existing.body.results.find(t => t.key === "standard-tax");
+  if (ours) {
+    log("⏭️", `Tax category "standard-tax" already exists, reusing.`);
+    return ours;
+  }
+
+  // If other tax categories exist but not ours, reuse the first one
+  // (the existing demo data already has a tax category we can use)
   if (existing.body.results.length > 0) {
-    log("⏭️", `Tax categories already exist (${existing.body.results.length}), skipping.`);
-    return existing.body.results[0];
+    const fallback = existing.body.results[0];
+    log("♻️", `Reusing existing tax category: ${fallback.name} (${fallback.key || 'no key'})`);
+    return fallback;
   }
 
   const taxCategory = await api
@@ -97,9 +108,12 @@ async function seedProductTypes() {
   log("📦", "Creating product types...");
 
   const existing = await api.productTypes().get().execute();
-  if (existing.body.results.length > 0) {
-    log("⏭️", `Product types already exist (${existing.body.results.length}), skipping.`);
-    return existing.body.results[0];
+
+  // Check if our specific product type exists by key
+  const ours = existing.body.results.find(t => t.key === "standard-product");
+  if (ours) {
+    log("⏭️", `Product type "standard-product" already exists, reusing.`);
+    return ours;
   }
 
   const productType = await api
@@ -112,7 +126,7 @@ async function seedProductTypes() {
         attributes: [
           {
             name: "color",
-            label: { en: "Color" },
+            label: { "en-US": "Color" },
             type: { name: "ltext" },
             isRequired: false,
             isSearchable: true,
@@ -121,8 +135,8 @@ async function seedProductTypes() {
           },
           {
             name: "size",
-            label: { en: "Size" },
-            type: { name: "text" },
+            label: { "en-US": "Size" },
+            type: { name: "ltext" },
             isRequired: false,
             isSearchable: true,
             attributeConstraint: "None",
@@ -130,7 +144,7 @@ async function seedProductTypes() {
           },
           {
             name: "material",
-            label: { en: "Material" },
+            label: { "en-US": "Material" },
             type: { name: "text" },
             isRequired: false,
             isSearchable: true,
@@ -139,7 +153,7 @@ async function seedProductTypes() {
           },
           {
             name: "brand",
-            label: { en: "Brand" },
+            label: { "en-US": "Brand" },
             type: { name: "text" },
             isRequired: false,
             isSearchable: true,
@@ -160,50 +174,50 @@ async function seedProductTypes() {
 const CATEGORY_TREE = [
   {
     key: "clothing",
-    name: { en: "Clothing" },
-    slug: { en: "clothing" },
+    name: { "en-US": "Clothing" },
+    slug: { "en-US": "clothing" },
     orderHint: "0.1",
     children: [
       {
         key: "mens-clothing",
-        name: { en: "Men's Clothing" },
-        slug: { en: "mens-clothing" },
+        name: { "en-US": "Men's Clothing" },
+        slug: { "en-US": "mens-clothing" },
         orderHint: "0.11",
         children: [
-          { key: "mens-shirts", name: { en: "Shirts" }, slug: { en: "mens-shirts" }, orderHint: "0.111" },
-          { key: "mens-pants", name: { en: "Pants" }, slug: { en: "mens-pants" }, orderHint: "0.112" },
+          { key: "mens-shirts", name: { "en-US": "Shirts" }, slug: { "en-US": "mens-shirts" }, orderHint: "0.111" },
+          { key: "mens-pants", name: { "en-US": "Pants" }, slug: { "en-US": "mens-pants" }, orderHint: "0.112" },
         ],
       },
       {
         key: "womens-clothing",
-        name: { en: "Women's Clothing" },
-        slug: { en: "womens-clothing" },
+        name: { "en-US": "Women's Clothing" },
+        slug: { "en-US": "womens-clothing" },
         orderHint: "0.12",
         children: [
-          { key: "womens-tops", name: { en: "Tops" }, slug: { en: "womens-tops" }, orderHint: "0.121" },
-          { key: "womens-dresses", name: { en: "Dresses" }, slug: { en: "womens-dresses" }, orderHint: "0.122" },
+          { key: "womens-tops", name: { "en-US": "Tops" }, slug: { "en-US": "womens-tops" }, orderHint: "0.121" },
+          { key: "womens-dresses", name: { "en-US": "Dresses" }, slug: { "en-US": "womens-dresses" }, orderHint: "0.122" },
         ],
       },
     ],
   },
   {
     key: "accessories",
-    name: { en: "Accessories" },
-    slug: { en: "accessories" },
+    name: { "en-US": "Accessories" },
+    slug: { "en-US": "accessories" },
     orderHint: "0.2",
     children: [
-      { key: "bags", name: { en: "Bags" }, slug: { en: "bags" }, orderHint: "0.21" },
-      { key: "watches", name: { en: "Watches" }, slug: { en: "watches" }, orderHint: "0.22" },
+      { key: "bags", name: { "en-US": "Bags" }, slug: { "en-US": "bags" }, orderHint: "0.21" },
+      { key: "watches", name: { "en-US": "Watches" }, slug: { "en-US": "watches" }, orderHint: "0.22" },
     ],
   },
   {
     key: "footwear",
-    name: { en: "Footwear" },
-    slug: { en: "footwear" },
+    name: { "en-US": "Footwear" },
+    slug: { "en-US": "footwear" },
     orderHint: "0.3",
     children: [
-      { key: "sneakers", name: { en: "Sneakers" }, slug: { en: "sneakers" }, orderHint: "0.31" },
-      { key: "boots", name: { en: "Boots" }, slug: { en: "boots" }, orderHint: "0.32" },
+      { key: "sneakers", name: { "en-US": "Sneakers" }, slug: { "en-US": "sneakers" }, orderHint: "0.31" },
+      { key: "boots", name: { "en-US": "Boots" }, slug: { "en-US": "boots" }, orderHint: "0.32" },
     ],
   },
 ];
@@ -211,37 +225,40 @@ const CATEGORY_TREE = [
 async function seedCategories() {
   log("🗂️", "Creating categories...");
 
-  const existing = await api.categories().get({ queryArgs: { limit: 100 } }).execute();
-  if (existing.body.results.length > 0) {
-    log("⏭️", `Categories already exist (${existing.body.results.length}), skipping.`);
-    // Build lookup map from existing categories
-    const map = {};
-    for (const c of existing.body.results) {
-      map[c.key] = c;
-    }
-    return map;
+  // Load ALL existing categories into a lookup map
+  const existing = await api.categories().get({ queryArgs: { limit: 500 } }).execute();
+  const categoryMap = {};
+  for (const c of existing.body.results) {
+    if (c.key) categoryMap[c.key] = c;
   }
 
-  const categoryMap = {};
+  let created = 0;
 
   async function createCategory(catDef, parentId) {
-    const body = {
-      key: catDef.key,
-      name: catDef.name,
-      slug: catDef.slug,
-      orderHint: catDef.orderHint,
-    };
-    if (parentId) {
-      body.parent = { typeId: "category", id: parentId };
+    // Skip if this category already exists (by key)
+    if (categoryMap[catDef.key]) {
+      log("  ⏭️", `${catDef.name["en-US"]} (${catDef.key}) — exists`);
+    } else {
+      const body = {
+        key: catDef.key,
+        name: catDef.name,
+        slug: catDef.slug,
+        orderHint: catDef.orderHint,
+      };
+      if (parentId) {
+        body.parent = { typeId: "category", id: parentId };
+      }
+
+      const result = await api.categories().post({ body }).execute();
+      categoryMap[catDef.key] = result.body;
+      created++;
+      log("  📁", `${catDef.name["en-US"]} (${catDef.key}) — created`);
     }
 
-    const result = await api.categories().post({ body }).execute();
-    categoryMap[catDef.key] = result.body;
-    log("  📁", `${catDef.name.en} (${catDef.key})`);
-
+    // Always recurse into children (parent might exist, children might not)
     if (catDef.children) {
       for (const child of catDef.children) {
-        await createCategory(child, result.body.id);
+        await createCategory(child, categoryMap[catDef.key].id);
       }
     }
   }
@@ -250,7 +267,11 @@ async function seedCategories() {
     await createCategory(root);
   }
 
-  log("✅", `Created ${Object.keys(categoryMap).length} categories`);
+  if (created > 0) {
+    log("✅", `Created ${created} new categories (${Object.keys(categoryMap).length} total)`);
+  } else {
+    log("⏭️", `All ${CATEGORY_TREE.length} root categories already exist`);
+  }
   return categoryMap;
 }
 
@@ -267,17 +288,17 @@ function makeProducts(productType, taxCategory, categories) {
   return [
     {
       key: "classic-oxford-shirt",
-      name: { en: "Classic Oxford Shirt" },
-      slug: { en: "classic-oxford-shirt" },
-      description: { en: "A timeless button-down Oxford shirt in premium cotton. Perfect for both casual and semi-formal occasions." },
+      name: { "en-US": "Classic Oxford Shirt" },
+      slug: { "en-US": "classic-oxford-shirt" },
+      description: { "en-US": "A timeless button-down Oxford shirt in premium cotton. Perfect for both casual and semi-formal occasions." },
       categories: [catRef("mens-shirts")].filter(Boolean),
       masterVariant: {
         sku: "OXF-BLU-M",
         prices: [{ value: { currencyCode: "USD", centAmount: 5999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/4A90D9/ffffff?text=Oxford+Shirt", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Blue" } },
-          { name: "size", value: "M" },
+          { name: "color", value: { "en-US": "Blue" } },
+          { name: "size", value: { "en-US": "M" } },
           { name: "material", value: "Cotton" },
           { name: "brand", value: "Heritage Basics" },
         ],
@@ -287,8 +308,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "OXF-BLU-L",
           prices: [{ value: { currencyCode: "USD", centAmount: 5999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Blue" } },
-            { name: "size", value: "L" },
+            { name: "color", value: { "en-US": "Blue" } },
+            { name: "size", value: { "en-US": "L" } },
             { name: "material", value: "Cotton" },
             { name: "brand", value: "Heritage Basics" },
           ],
@@ -297,8 +318,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "OXF-WHT-M",
           prices: [{ value: { currencyCode: "USD", centAmount: 5999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "White" } },
-            { name: "size", value: "M" },
+            { name: "color", value: { "en-US": "White" } },
+            { name: "size", value: { "en-US": "M" } },
             { name: "material", value: "Cotton" },
             { name: "brand", value: "Heritage Basics" },
           ],
@@ -307,17 +328,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "slim-fit-chinos",
-      name: { en: "Slim Fit Chinos" },
-      slug: { en: "slim-fit-chinos" },
-      description: { en: "Modern slim-fit chinos crafted from stretch cotton twill. Comfortable all-day wear with a clean silhouette." },
+      name: { "en-US": "Slim Fit Chinos" },
+      slug: { "en-US": "slim-fit-chinos" },
+      description: { "en-US": "Modern slim-fit chinos crafted from stretch cotton twill. Comfortable all-day wear with a clean silhouette." },
       categories: [catRef("mens-pants")].filter(Boolean),
       masterVariant: {
         sku: "CHI-KHA-32",
         prices: [{ value: { currencyCode: "USD", centAmount: 7999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/C4A86C/ffffff?text=Slim+Chinos", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Khaki" } },
-          { name: "size", value: "32" },
+          { name: "color", value: { "en-US": "Khaki" } },
+          { name: "size", value: { "en-US": "32" } },
           { name: "material", value: "Cotton Twill" },
           { name: "brand", value: "Heritage Basics" },
         ],
@@ -327,8 +348,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "CHI-NVY-32",
           prices: [{ value: { currencyCode: "USD", centAmount: 7999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Navy" } },
-            { name: "size", value: "32" },
+            { name: "color", value: { "en-US": "Navy" } },
+            { name: "size", value: { "en-US": "32" } },
             { name: "material", value: "Cotton Twill" },
             { name: "brand", value: "Heritage Basics" },
           ],
@@ -337,17 +358,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "floral-blouse",
-      name: { en: "Floral Print Blouse" },
-      slug: { en: "floral-blouse" },
-      description: { en: "An elegant floral print blouse with a relaxed fit. Lightweight fabric ideal for spring and summer." },
+      name: { "en-US": "Floral Print Blouse" },
+      slug: { "en-US": "floral-blouse" },
+      description: { "en-US": "An elegant floral print blouse with a relaxed fit. Lightweight fabric ideal for spring and summer." },
       categories: [catRef("womens-tops")].filter(Boolean),
       masterVariant: {
         sku: "BLS-FLR-S",
         prices: [{ value: { currencyCode: "USD", centAmount: 4999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/E88CA5/ffffff?text=Floral+Blouse", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Pink Floral" } },
-          { name: "size", value: "S" },
+          { name: "color", value: { "en-US": "Pink Floral" } },
+          { name: "size", value: { "en-US": "S" } },
           { name: "material", value: "Polyester" },
           { name: "brand", value: "Bloom Studio" },
         ],
@@ -357,8 +378,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "BLS-FLR-M",
           prices: [{ value: { currencyCode: "USD", centAmount: 4999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Pink Floral" } },
-            { name: "size", value: "M" },
+            { name: "color", value: { "en-US": "Pink Floral" } },
+            { name: "size", value: { "en-US": "M" } },
             { name: "material", value: "Polyester" },
             { name: "brand", value: "Bloom Studio" },
           ],
@@ -367,17 +388,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "wrap-midi-dress",
-      name: { en: "Wrap Midi Dress" },
-      slug: { en: "wrap-midi-dress" },
-      description: { en: "A flattering wrap-style midi dress in a rich emerald tone. Versatile enough for work or weekend." },
+      name: { "en-US": "Wrap Midi Dress" },
+      slug: { "en-US": "wrap-midi-dress" },
+      description: { "en-US": "A flattering wrap-style midi dress in a rich emerald tone. Versatile enough for work or weekend." },
       categories: [catRef("womens-dresses")].filter(Boolean),
       masterVariant: {
         sku: "DRS-EMR-S",
         prices: [{ value: { currencyCode: "USD", centAmount: 8999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/2ECC71/ffffff?text=Wrap+Dress", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Emerald" } },
-          { name: "size", value: "S" },
+          { name: "color", value: { "en-US": "Emerald" } },
+          { name: "size", value: { "en-US": "S" } },
           { name: "material", value: "Jersey" },
           { name: "brand", value: "Bloom Studio" },
         ],
@@ -387,8 +408,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "DRS-EMR-M",
           prices: [{ value: { currencyCode: "USD", centAmount: 8999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Emerald" } },
-            { name: "size", value: "M" },
+            { name: "color", value: { "en-US": "Emerald" } },
+            { name: "size", value: { "en-US": "M" } },
             { name: "material", value: "Jersey" },
             { name: "brand", value: "Bloom Studio" },
           ],
@@ -397,8 +418,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "DRS-BLK-S",
           prices: [{ value: { currencyCode: "USD", centAmount: 8999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Black" } },
-            { name: "size", value: "S" },
+            { name: "color", value: { "en-US": "Black" } },
+            { name: "size", value: { "en-US": "S" } },
             { name: "material", value: "Jersey" },
             { name: "brand", value: "Bloom Studio" },
           ],
@@ -407,17 +428,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "leather-tote-bag",
-      name: { en: "Leather Tote Bag" },
-      slug: { en: "leather-tote-bag" },
-      description: { en: "A spacious leather tote with interior pockets and a magnetic clasp. Ideal for everyday essentials." },
+      name: { "en-US": "Leather Tote Bag" },
+      slug: { "en-US": "leather-tote-bag" },
+      description: { "en-US": "A spacious leather tote with interior pockets and a magnetic clasp. Ideal for everyday essentials." },
       categories: [catRef("bags")].filter(Boolean),
       masterVariant: {
         sku: "BAG-TAN-OS",
         prices: [{ value: { currencyCode: "USD", centAmount: 12999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/A0522D/ffffff?text=Leather+Tote", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Tan" } },
-          { name: "size", value: "One Size" },
+          { name: "color", value: { "en-US": "Tan" } },
+          { name: "size", value: { "en-US": "One Size" } },
           { name: "material", value: "Full-grain Leather" },
           { name: "brand", value: "Urban Carry" },
         ],
@@ -427,8 +448,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "BAG-BLK-OS",
           prices: [{ value: { currencyCode: "USD", centAmount: 12999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Black" } },
-            { name: "size", value: "One Size" },
+            { name: "color", value: { "en-US": "Black" } },
+            { name: "size", value: { "en-US": "One Size" } },
             { name: "material", value: "Full-grain Leather" },
             { name: "brand", value: "Urban Carry" },
           ],
@@ -437,17 +458,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "classic-chronograph",
-      name: { en: "Classic Chronograph Watch" },
-      slug: { en: "classic-chronograph" },
-      description: { en: "A stainless-steel chronograph with sapphire crystal and 50m water resistance. Swiss movement." },
+      name: { "en-US": "Classic Chronograph Watch" },
+      slug: { "en-US": "classic-chronograph" },
+      description: { "en-US": "A stainless-steel chronograph with sapphire crystal and 50m water resistance. Swiss movement." },
       categories: [catRef("watches")].filter(Boolean),
       masterVariant: {
         sku: "WCH-SLV-OS",
         prices: [{ value: { currencyCode: "USD", centAmount: 24999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/C0C0C0/333333?text=Chronograph", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Silver" } },
-          { name: "size", value: "One Size" },
+          { name: "color", value: { "en-US": "Silver" } },
+          { name: "size", value: { "en-US": "One Size" } },
           { name: "material", value: "Stainless Steel" },
           { name: "brand", value: "TimeCraft" },
         ],
@@ -457,8 +478,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "WCH-GLD-OS",
           prices: [{ value: { currencyCode: "USD", centAmount: 29999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Gold" } },
-            { name: "size", value: "One Size" },
+            { name: "color", value: { "en-US": "Gold" } },
+            { name: "size", value: { "en-US": "One Size" } },
             { name: "material", value: "Stainless Steel" },
             { name: "brand", value: "TimeCraft" },
           ],
@@ -467,17 +488,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "urban-runner-sneakers",
-      name: { en: "Urban Runner Sneakers" },
-      slug: { en: "urban-runner-sneakers" },
-      description: { en: "Lightweight mesh sneakers with cushioned sole. Built for comfort whether you're running or just running errands." },
+      name: { "en-US": "Urban Runner Sneakers" },
+      slug: { "en-US": "urban-runner-sneakers" },
+      description: { "en-US": "Lightweight mesh sneakers with cushioned sole. Built for comfort whether you're running or just running errands." },
       categories: [catRef("sneakers")].filter(Boolean),
       masterVariant: {
         sku: "SNK-WHT-10",
         prices: [{ value: { currencyCode: "USD", centAmount: 9999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/F0F0F0/333333?text=Sneakers", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "White" } },
-          { name: "size", value: "10" },
+          { name: "color", value: { "en-US": "White" } },
+          { name: "size", value: { "en-US": "10" } },
           { name: "material", value: "Mesh/Rubber" },
           { name: "brand", value: "StrideX" },
         ],
@@ -487,8 +508,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "SNK-BLK-10",
           prices: [{ value: { currencyCode: "USD", centAmount: 9999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Black" } },
-            { name: "size", value: "10" },
+            { name: "color", value: { "en-US": "Black" } },
+            { name: "size", value: { "en-US": "10" } },
             { name: "material", value: "Mesh/Rubber" },
             { name: "brand", value: "StrideX" },
           ],
@@ -497,8 +518,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "SNK-WHT-11",
           prices: [{ value: { currencyCode: "USD", centAmount: 9999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "White" } },
-            { name: "size", value: "11" },
+            { name: "color", value: { "en-US": "White" } },
+            { name: "size", value: { "en-US": "11" } },
             { name: "material", value: "Mesh/Rubber" },
             { name: "brand", value: "StrideX" },
           ],
@@ -507,17 +528,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "chelsea-leather-boots",
-      name: { en: "Chelsea Leather Boots" },
-      slug: { en: "chelsea-leather-boots" },
-      description: { en: "Classic pull-on Chelsea boots in full-grain leather. Elastic side panels and a durable rubber sole." },
+      name: { "en-US": "Chelsea Leather Boots" },
+      slug: { "en-US": "chelsea-leather-boots" },
+      description: { "en-US": "Classic pull-on Chelsea boots in full-grain leather. Elastic side panels and a durable rubber sole." },
       categories: [catRef("boots")].filter(Boolean),
       masterVariant: {
         sku: "BTS-BRN-10",
         prices: [{ value: { currencyCode: "USD", centAmount: 15999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/8B4513/ffffff?text=Chelsea+Boots", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Brown" } },
-          { name: "size", value: "10" },
+          { name: "color", value: { "en-US": "Brown" } },
+          { name: "size", value: { "en-US": "10" } },
           { name: "material", value: "Full-grain Leather" },
           { name: "brand", value: "StrideX" },
         ],
@@ -527,8 +548,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "BTS-BLK-10",
           prices: [{ value: { currencyCode: "USD", centAmount: 15999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Black" } },
-            { name: "size", value: "10" },
+            { name: "color", value: { "en-US": "Black" } },
+            { name: "size", value: { "en-US": "10" } },
             { name: "material", value: "Full-grain Leather" },
             { name: "brand", value: "StrideX" },
           ],
@@ -537,17 +558,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "linen-summer-shirt",
-      name: { en: "Linen Summer Shirt" },
-      slug: { en: "linen-summer-shirt" },
-      description: { en: "A breathable linen shirt with a relaxed collar. The perfect warm-weather essential." },
+      name: { "en-US": "Linen Summer Shirt" },
+      slug: { "en-US": "linen-summer-shirt" },
+      description: { "en-US": "A breathable linen shirt with a relaxed collar. The perfect warm-weather essential." },
       categories: [catRef("mens-shirts")].filter(Boolean),
       masterVariant: {
         sku: "LIN-WHT-M",
         prices: [{ value: { currencyCode: "USD", centAmount: 6999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/FAF0E6/333333?text=Linen+Shirt", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "White" } },
-          { name: "size", value: "M" },
+          { name: "color", value: { "en-US": "White" } },
+          { name: "size", value: { "en-US": "M" } },
           { name: "material", value: "Linen" },
           { name: "brand", value: "Heritage Basics" },
         ],
@@ -557,8 +578,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "LIN-SKY-M",
           prices: [{ value: { currencyCode: "USD", centAmount: 6999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Sky Blue" } },
-            { name: "size", value: "M" },
+            { name: "color", value: { "en-US": "Sky Blue" } },
+            { name: "size", value: { "en-US": "M" } },
             { name: "material", value: "Linen" },
             { name: "brand", value: "Heritage Basics" },
           ],
@@ -567,8 +588,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "LIN-WHT-L",
           prices: [{ value: { currencyCode: "USD", centAmount: 6999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "White" } },
-            { name: "size", value: "L" },
+            { name: "color", value: { "en-US": "White" } },
+            { name: "size", value: { "en-US": "L" } },
             { name: "material", value: "Linen" },
             { name: "brand", value: "Heritage Basics" },
           ],
@@ -577,17 +598,17 @@ function makeProducts(productType, taxCategory, categories) {
     },
     {
       key: "canvas-backpack",
-      name: { en: "Canvas Backpack" },
-      slug: { en: "canvas-backpack" },
-      description: { en: "A rugged canvas backpack with leather trim and a padded laptop compartment. Built to last." },
+      name: { "en-US": "Canvas Backpack" },
+      slug: { "en-US": "canvas-backpack" },
+      description: { "en-US": "A rugged canvas backpack with leather trim and a padded laptop compartment. Built to last." },
       categories: [catRef("bags")].filter(Boolean),
       masterVariant: {
         sku: "BPK-OLV-OS",
         prices: [{ value: { currencyCode: "USD", centAmount: 8999 }, country: "US" }],
         images: [{ url: "https://placehold.co/600x800/556B2F/ffffff?text=Canvas+Backpack", dimensions: { w: 600, h: 800 } }],
         attributes: [
-          { name: "color", value: { en: "Olive" } },
-          { name: "size", value: "One Size" },
+          { name: "color", value: { "en-US": "Olive" } },
+          { name: "size", value: { "en-US": "One Size" } },
           { name: "material", value: "Canvas/Leather" },
           { name: "brand", value: "Urban Carry" },
         ],
@@ -597,8 +618,8 @@ function makeProducts(productType, taxCategory, categories) {
           sku: "BPK-GRY-OS",
           prices: [{ value: { currencyCode: "USD", centAmount: 8999 }, country: "US" }],
           attributes: [
-            { name: "color", value: { en: "Grey" } },
-            { name: "size", value: "One Size" },
+            { name: "color", value: { "en-US": "Grey" } },
+            { name: "size", value: { "en-US": "One Size" } },
             { name: "material", value: "Canvas/Leather" },
             { name: "brand", value: "Urban Carry" },
           ],
@@ -611,15 +632,30 @@ function makeProducts(productType, taxCategory, categories) {
 async function seedProducts(productType, taxCategory, categories) {
   log("👕", "Creating products...");
 
-  const existing = await api.products().get({ queryArgs: { limit: 1 } }).execute();
-  if (existing.body.results.length > 0) {
-    log("⏭️", `Products already exist (${existing.body.total}), skipping.`);
+  const products = makeProducts(productType, taxCategory, categories);
+
+  // Check which of OUR products already exist by key
+  const existingKeys = new Set();
+  for (const product of products) {
+    try {
+      await api.products().withKey({ key: product.key }).get().execute();
+      existingKeys.add(product.key);
+    } catch (err) {
+      // 404 means it doesn't exist — we need to create it
+      if (err.statusCode !== 404) throw err;
+    }
+  }
+
+  const toCreate = products.filter(p => !existingKeys.has(p.key));
+
+  if (toCreate.length === 0) {
+    log("⏭️", `All ${products.length} fashion products already exist, skipping.`);
     return;
   }
 
-  const products = makeProducts(productType, taxCategory, categories);
+  log("📝", `${existingKeys.size} already exist, creating ${toCreate.length} new products...`);
 
-  for (const product of products) {
+  for (const product of toCreate) {
     const body = {
       key: product.key,
       name: product.name,
@@ -634,11 +670,11 @@ async function seedProducts(productType, taxCategory, categories) {
     };
 
     await api.products().post({ body }).execute();
-    log("  🛍️", `${product.name.en} (${product.key})`);
+    log("  🛍️", `${product.name["en-US"]} (${product.key})`);
     await sleep(200); // gentle on API rate limits
   }
 
-  log("✅", `Created ${products.length} products`);
+  log("✅", `Created ${toCreate.length} products`);
 }
 
 // ── 5. Shipping ──────────────────────────────────────────────────────────────
@@ -646,29 +682,41 @@ async function seedProducts(productType, taxCategory, categories) {
 async function seedShipping(taxCategory) {
   log("🚚", "Creating shipping zones and methods...");
 
-  // Check if shipping methods exist
+  // Check if OUR specific shipping methods exist by key
   const existingMethods = await api.shippingMethods().get().execute();
-  if (existingMethods.body.results.length > 0) {
-    log("⏭️", `Shipping methods already exist (${existingMethods.body.results.length}), skipping.`);
+  const existingKeys = new Set(existingMethods.body.results.filter(m => m.key).map(m => m.key));
+
+  if (existingKeys.has("standard-shipping") && existingKeys.has("express-shipping")) {
+    log("⏭️", `Our shipping methods already exist, skipping.`);
     return;
   }
 
-  // Create zone
-  const zone = await api
-    .zones()
-    .post({
-      body: {
-        key: "us-zone",
-        name: "United States",
-        description: "Continental US shipping zone",
-        locations: [{ country: "US" }],
-      },
-    })
-    .execute();
-  log("  🌍", `Zone: ${zone.body.name}`);
+  // Create or reuse zone
+  let zone;
+  const existingZones = await api.zones().get().execute();
+  const usZone = existingZones.body.results.find(z => z.key === "us-zone");
+  if (usZone) {
+    zone = usZone;
+    log("  ♻️", `Reusing zone: ${zone.name}`);
+  } else {
+    const zoneResult = await api
+      .zones()
+      .post({
+        body: {
+          key: "us-zone",
+          name: "United States",
+          description: "Continental US shipping zone",
+          locations: [{ country: "US" }],
+        },
+      })
+      .execute();
+    zone = zoneResult.body;
+    log("  🌍", `Zone created: ${zone.name}`);
+  }
 
   // Standard shipping
-  const standard = await api
+  if (!existingKeys.has("standard-shipping")) {
+    const standard = await api
     .shippingMethods()
     .post({
       body: {
@@ -678,7 +726,7 @@ async function seedShipping(taxCategory) {
         taxCategory: { typeId: "tax-category", id: taxCategory.id },
         zoneRates: [
           {
-            zone: { typeId: "zone", id: zone.body.id },
+            zone: { typeId: "zone", id: zone.id },
             shippingRates: [
               {
                 price: { currencyCode: "USD", centAmount: 599 },
@@ -692,9 +740,13 @@ async function seedShipping(taxCategory) {
     })
     .execute();
   log("  📦", `Shipping: ${standard.body.name} ($5.99, free over $75)`);
+  } else {
+    log("  ⏭️", "Standard Shipping already exists");
+  }
 
   // Express shipping
-  const express = await api
+  if (!existingKeys.has("express-shipping")) {
+    const express = await api
     .shippingMethods()
     .post({
       body: {
@@ -704,7 +756,7 @@ async function seedShipping(taxCategory) {
         taxCategory: { typeId: "tax-category", id: taxCategory.id },
         zoneRates: [
           {
-            zone: { typeId: "zone", id: zone.body.id },
+            zone: { typeId: "zone", id: zone.id },
             shippingRates: [
               {
                 price: { currencyCode: "USD", centAmount: 1499 },
@@ -717,6 +769,9 @@ async function seedShipping(taxCategory) {
     })
     .execute();
   log("  ⚡", `Shipping: ${express.body.name} ($14.99)`);
+  } else {
+    log("  ⏭️", "Express Shipping already exists");
+  }
 
   log("✅", "Shipping zones and methods created");
 }
