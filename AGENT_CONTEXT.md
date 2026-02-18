@@ -1,15 +1,15 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 10 / Task 6 (Feature 5: Checkout API + UI)
+2026-02-18 — Agent Session 11 / Task 7 (Feature 6: Orders History)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
-commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
+commercetool project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API and Next.js web. Features 1-5 complete (Products, PDP, Cart, Auth, Checkout).
-**Unit testing completed for all features** — 121 tests total (57 API + 64 Web).
+NestJS API and Next.js web. Features 1-6 complete (Products, PDP, Cart, Auth, Checkout, Orders History).
+**Unit testing completed for all features** — 143 tests total (57 API + 86 Web).
 
 ## Completed Work
 
@@ -106,6 +106,16 @@ NestJS API and Next.js web. Features 1-5 complete (Products, PDP, Cart, Auth, Ch
 - [x] Unit tests: 10 API tests (orders.service.spec.ts), 30 Web tests
 - [x] TypeScript type check passes
 
+### ✅ Feature 6: Orders History (Task 7)
+- [x] GET /orders API already implemented (JWT protected, uses customerId query)
+- [x] ordersApi.list(token) already in api-client.ts
+- [x] OrderStatusBadge component: colored badges for order/payment/shipment states
+- [x] OrderCard component: order summary with line items, statuses, total, view link
+- [x] Orders page (/account/orders): client component, fetches and displays orders
+- [x] Order details page (/account/orders/[id]): full order info with items and summary
+- [x] Unit tests: 10 OrderStatusBadge tests + 12 OrderCard tests (22 new Web tests)
+- [x] TypeScript type check passes
+
 ### 🧪 Unit Testing Status
 > **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
 
@@ -117,10 +127,10 @@ NestJS API and Next.js web. Features 1-5 complete (Products, PDP, Cart, Auth, Ch
 | Feature 4: Auth API + UI | ✅ 13 tests | ✅ 10 tests | Complete |
 | Feature 5: Checkout | ✅ 10 tests | ✅ 30 tests | Complete |
 | CustomersService | ✅ 5 tests | N/A | Complete |
-| Feature 6: Orders (future) | - | - | Will include tests |
+| Feature 6: Orders History | N/A (API exists) | ✅ 22 tests | Complete |
 
 **Test Summary:**
-- Total: **121 tests** (57 API + 64 Web) — all passing ✅
+- Total: **143 tests** (57 API + 86 Web) — all passing ✅
 - API tests: Jest + @nestjs/testing
 - Web tests: Vitest + @testing-library/react
 
@@ -137,6 +147,8 @@ NestJS API and Next.js web. Features 1-5 complete (Products, PDP, Cart, Auth, Ch
 - `apps/web/src/contexts/CheckoutContext.test.tsx` (12 tests)
 - `apps/web/src/components/checkout/AddressForm.test.tsx` (8 tests)
 - `apps/web/src/components/checkout/ShippingMethodSelector.test.tsx` (10 tests)
+- `apps/web/src/components/orders/OrderStatusBadge.test.tsx` (10 tests)
+- `apps/web/src/components/orders/OrderCard.test.tsx` (12 tests)
 
 **Test Infrastructure:**
 - NestJS (apps/api): Jest configured via `@nestjs/testing`
@@ -156,13 +168,14 @@ NestJS API and Next.js web. Features 1-5 complete (Products, PDP, Cart, Auth, Ch
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 6 (Feature 5: Checkout) complete. Branch `feature/CT-006-checkout` ready to push and PR → develop.
+Task 7 (Feature 6: Orders History) complete. Branch `feature/CT-007-orders-history` ready to push and PR → develop.
 
-**Feature 5 Checkout completed** — Full checkout flow with shipping address, shipping method, and order creation.
+**Feature 6 Orders History completed** — Full order history UI with status badges, order details page.
 
-Next agent session should pick up:
-1. Task 7: Feature 6 — Orders History (My Orders page improvements)
-2. Consider Profile/Address management if needed
+All planned B2C features (1-6) are now complete. Next priorities:
+1. Consider Profile/Address management (customer profile page)
+2. CI/CD pipeline implementation
+3. GCP deployment when production-ready
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -192,8 +205,10 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4 + tests
 5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5 + tests
 6. ~~Task 5.5: Add unit tests for Features 1-4~~ ✅ Done (86 tests passing)
-7. **Feature 5: Checkout API + Checkout UI** (with tests) ⭐ NEXT
-8. Feature 6: Orders API + Order History (with tests)
+7. ~~Feature 5: Checkout API + Checkout UI~~ ✅ Done in Task 6 + tests (121 tests)
+8. ~~Feature 6: Orders API + Order History~~ ✅ Done in Task 7 + tests (143 tests)
+9. Profile/Address management (optional)
+10. Cart merge on login (customers.login() flow)
 
 ### Production (do these when ready to go live)
 8. GitHub Actions CI/CD pipelines

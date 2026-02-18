@@ -12,3 +12,6 @@ export { default as UserMenu } from "./UserMenu";
 
 // Checkout components
 export * from "./checkout";
+
+// Order components
+export * from "./orders";
