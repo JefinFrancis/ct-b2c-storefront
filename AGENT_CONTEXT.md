@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 8 / Task 5.1 (Added Unit Testing Requirements)
+2026-02-17 — Agent Session 9 / Task 5.5 (Unit Tests for Features 1-4)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
@@ -9,8 +9,7 @@ commercetools project (c-spire-oe-demo, US region) is configured with an Admin A
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
 NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
-**Unit testing is now mandatory for all features** — existing features need tests
-added (marked as pending), all new features must include tests.
+**Unit testing completed for all features** — 86 tests total (52 API + 34 Web).
 
 ## Completed Work
 
@@ -93,19 +92,37 @@ added (marked as pending), all new features must include tests.
 
 | Feature | API Tests | Web Tests | Status |
 |---------|-----------|-----------|--------|
-| Feature 1: Products API + PLP | ⏳ Pending | ⏳ Pending | Needs tests |
-| Feature 2: PDP | N/A | ⏳ Pending | Needs tests |
-| Feature 3: Cart API + UI | ⏳ Pending | ⏳ Pending | Needs tests |
-| Feature 4: Auth API + UI | ⏳ Pending | ⏳ Pending | Needs tests |
+| Feature 1: Products API + PLP | ✅ 14 tests | ✅ 9 tests | Complete |
+| Feature 2: PDP | N/A | ✅ (via ProductCard) | Complete |
+| Feature 3: Cart API + UI | ✅ 15 tests | ✅ 15 tests | Complete |
+| Feature 4: Auth API + UI | ✅ 13 tests | ✅ 10 tests | Complete |
+| CustomersService | ✅ 5 tests | N/A | Complete |
+| OrdersService | ✅ 5 tests | N/A | Complete |
 | Feature 5: Checkout (future) | - | - | Will include tests |
 | Feature 6: Orders (future) | - | - | Will include tests |
 
+**Test Summary:**
+- Total: **86 tests** (52 API + 34 Web) — all passing ✅
+- API tests: Jest + @nestjs/testing
+- Web tests: Vitest + @testing-library/react
+
+**Test Files Created:**
+- `apps/api/src/products/products.service.spec.ts` (14 tests)
+- `apps/api/src/auth/auth.service.spec.ts` (13 tests)
+- `apps/api/src/cart/cart.service.spec.ts` (15 tests)
+- `apps/api/src/customers/customers.service.spec.ts` (5 tests)
+- `apps/api/src/orders/orders.service.spec.ts` (5 tests)
+- `apps/web/src/components/ProductCard.test.tsx` (9 tests)
+- `apps/web/src/components/MiniCart.test.tsx` (9 tests)
+- `apps/web/src/contexts/CartContext.test.tsx` (6 tests)
+- `apps/web/src/contexts/AuthContext.test.tsx` (10 tests)
+
 **Test Infrastructure:**
 - NestJS (apps/api): Jest configured via `@nestjs/testing`
-- Next.js (apps/web): Vitest + @testing-library/react
-- Run all tests: `npm run test`
-- Run API tests: `npx turbo test --filter=api`
-- Run Web tests: `npx turbo test --filter=web`
+- Next.js (apps/web): Vitest + @testing-library/react + jsdom
+- Run all tests: `npm test`
+- Run API tests: `npm run test:api` or `npx turbo test --filter=api`
+- Run Web tests: `npm run test:web` or `npx turbo test --filter=web`
 
 ### ⏳ GCP / Production (not started — deferred until production-ready)
 - [ ] GitHub Secrets configured (CT, GCP, Upstash, app URLs)
@@ -118,15 +135,12 @@ added (marked as pending), all new features must include tests.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 5 (Feature 4: Auth) complete. Branch `feature/CT-004-auth` ready to push and PR → develop.
-Feature 3 branch merged into this branch for continuity.
+Task 5.5 (Unit Tests) complete. Branch `feature/CT-005-unit-tests` ready to push and PR → develop.
 
-**Unit testing requirement added** — all features must now include unit tests.
-Existing features (1-4) need tests added as separate tasks.
+**Unit testing completed** — 86 tests covering all services, components, and contexts.
 
 Next agent session should pick up:
-1. Add unit tests for existing features (Task 5.5: Unit Tests)
-2. Then continue with Task 6 (Feature 5: Checkout API + Checkout UI)
+1. Task 6: Feature 5 — Checkout API + Checkout UI (with tests)
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -151,12 +165,12 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 
 ### Local development (work on these now)
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
-2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2 (tests pending)
-3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3 (tests pending)
-4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4 (tests pending)
-5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5 (tests pending)
-6. **Task 5.5: Add unit tests for Features 1-4** ⭐ HIGH PRIORITY
-7. Feature 5: Checkout API + Checkout UI (with tests)
+2. ~~Feature 1: Products API + PLP wiring~~ ✅ Done in Task 2 + tests
+3. ~~Feature 2: PDP wiring~~ ✅ Done in Task 3 + tests
+4. ~~Feature 3: Cart API + Cart UI wiring~~ ✅ Done in Task 4 + tests
+5. ~~Feature 4: Auth API + Auth UI wiring~~ ✅ Done in Task 5 + tests
+6. ~~Task 5.5: Add unit tests for Features 1-4~~ ✅ Done (86 tests passing)
+7. **Feature 5: Checkout API + Checkout UI** (with tests) ⭐ NEXT
 8. Feature 6: Orders API + Order History (with tests)
 
 ### Production (do these when ready to go live)

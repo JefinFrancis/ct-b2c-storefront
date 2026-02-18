@@ -10,7 +10,9 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "turbo test",
+    "test": "turbo test --filter=api --filter=web",
+    "test:api": "turbo test --filter=api",
+    "test:web": "turbo test --filter=web",
     "build:api": "turbo build --filter=api",
     "build:web": "turbo build --filter=web"
   },
