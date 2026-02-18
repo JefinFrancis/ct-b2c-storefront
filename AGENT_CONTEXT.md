@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-18 — Agent Session 11 / Task 7 (Feature 6: Orders History)
+2026-02-18 — Agent Session 11 / Task 8 (Bugfix: Web Functionality)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
@@ -9,6 +9,7 @@ commercetool project (c-spire-oe-demo, US region) is configured with an Admin AP
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
 NestJS API and Next.js web. Features 1-6 complete (Products, PDP, Cart, Auth, Checkout, Orders History).
+Bugfix release applied: CORS, search, category filter, variant selector, auth token.
 **Unit testing completed for all features** — 143 tests total (57 API + 86 Web).
 
 ## Completed Work
@@ -115,6 +116,18 @@ NestJS API and Next.js web. Features 1-6 complete (Products, PDP, Cart, Auth, Ch
 - [x] Order details page (/account/orders/[id]): full order info with items and summary
 - [x] Unit tests: 10 OrderStatusBadge tests + 12 OrderCard tests (22 new Web tests)
 - [x] TypeScript type check passes
+
+### ✅ Bugfix: Web Functionality (Task 8)
+- [x] CORS fix: ALLOWED_ORIGIN=http://localhost:3001 in docker-compose.yml
+- [x] Next.js images: placehold.co added to remotePatterns in next.config.ts
+- [x] ProductSearch component: search box on PLP with URL param integration
+- [x] CategoryFilter component: category dropdown filter on PLP
+- [x] products.controller.ts: GET /products/categories endpoint
+- [x] products.service.ts: getCategories() with 10-min Redis cache
+- [x] VariantSelector: color swatch support, hidden redundant attributes
+- [x] AuthContext: exposed token state for orders fetching
+- [x] Order details page: LocalizedString helper, fixed Address.state → region
+- [x] All 143 tests pass (57 API + 86 Web)
 
 ### 🧪 Unit Testing Status
 > **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
