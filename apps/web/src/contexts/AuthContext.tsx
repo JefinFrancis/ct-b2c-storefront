@@ -29,6 +29,7 @@ interface RegisterData {
 
 interface AuthContextValue {
   customer: Customer | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -80,22 +81,24 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Check for existing token and fetch customer on mount
   useEffect(() => {
     const initAuth = async () => {
-      const token = getStoredToken();
+      const storedToken = getStoredToken();
       
-      if (!token) {
+      if (!storedToken) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const fetchedCustomer = await authApi.getMe(token);
+        const fetchedCustomer = await authApi.getMe(storedToken);
         setCustomer(fetchedCustomer);
+        setToken(storedToken);
       } catch (err) {
         console.error("Failed to fetch customer:", err);
         // Token is invalid, clear it
@@ -113,12 +116,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
 
     try {
-      const { token, customer: loggedInCustomer } = await authApi.login({
+      const { token: authToken, customer: loggedInCustomer } = await authApi.login({
         email,
         password,
       });
       
-      storeToken(token);
+      storeToken(authToken);
+      setToken(authToken);
       setCustomer(loggedInCustomer);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
@@ -134,9 +138,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
 
     try {
-      const { token, customer: registeredCustomer } = await authApi.register(data);
+      const { token: authToken, customer: registeredCustomer } = await authApi.register(data);
       
-      storeToken(token);
+      storeToken(authToken);
+      setToken(authToken);
       setCustomer(registeredCustomer);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Registration failed";
@@ -149,6 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = useCallback(() => {
     clearToken();
+    setToken(null);
     setCustomer(null);
     setError(null);
   }, []);
@@ -160,6 +166,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value = useMemo<AuthContextValue>(
     () => ({
       customer,
+      token,
       isAuthenticated: !!customer,
       isLoading,
       error,
@@ -168,7 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       logout,
       clearError,
     }),
-    [customer, isLoading, error, login, register, logout, clearError]
+    [customer, token, isLoading, error, login, register, logout, clearError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

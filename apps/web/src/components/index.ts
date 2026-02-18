@@ -9,6 +9,8 @@ export { default as AddToCartButton } from "./AddToCartButton";
 export { default as ProductDetails } from "./ProductDetails";
 export { default as MiniCart } from "./MiniCart";
 export { default as UserMenu } from "./UserMenu";
+export { default as ProductSearch } from "./ProductSearch";
+export { default as CategoryFilter } from "./CategoryFilter";
 
 // Checkout components
 export * from "./checkout";

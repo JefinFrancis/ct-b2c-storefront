@@ -1,6 +1,7 @@
 /**
  * VariantSelector — displays product variant options (color, size, etc.)
  * Allows selecting a variant and shows availability status.
+ * Handles color-code attributes with actual color swatches.
  */
 "use client";
 
@@ -15,6 +16,30 @@ interface VariantSelectorProps {
   locale?: string;
 }
 
+// Attributes that should be hidden (shown via color swatch instead)
+const HIDDEN_ATTRIBUTES = ["color-code", "search-color", "productspec"];
+
+// Attribute names that indicate color
+const COLOR_ATTRIBUTES = ["color-label", "color", "colorFinish"];
+
+/**
+ * Check if a value looks like a hex color code.
+ */
+function isHexColor(value: string): boolean {
+  return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(value);
+}
+
+/**
+ * Get color code from variant attributes.
+ */
+function getColorCode(variant: ProductVariant): string | null {
+  const colorCodeAttr = variant.attributes?.find((a) => a.name === "color-code");
+  if (colorCodeAttr && typeof colorCodeAttr.value === "string" && isHexColor(colorCodeAttr.value)) {
+    return colorCodeAttr.value;
+  }
+  return null;
+}
+
 /**
  * Extract attribute value as a displayable string.
  */
@@ -24,6 +49,10 @@ function getAttributeDisplayValue(value: unknown): string {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (value && typeof value === "object") {
     // Handle localized string or label
+    if ("label" in value && typeof (value as { label: unknown }).label === "object") {
+      const labelObj = (value as { label: Record<string, string> }).label;
+      return labelObj["en-US"] || labelObj["en-GB"] || Object.values(labelObj)[0] || "";
+    }
     if ("label" in value && typeof (value as { label: string }).label === "string") {
       return (value as { label: string }).label;
     }
@@ -91,11 +120,15 @@ export default function VariantSelector({
     [allVariants, selectedVariantId, masterVariant]
   );
 
-  // Get unique attribute names across all variants
+  // Get unique attribute names across all variants (excluding hidden ones)
   const attributeNames = useMemo(() => {
     const names = new Set<string>();
     for (const variant of allVariants) {
-      variant.attributes?.forEach((attr) => names.add(attr.name));
+      variant.attributes?.forEach((attr) => {
+        if (!HIDDEN_ATTRIBUTES.includes(attr.name)) {
+          names.add(attr.name);
+        }
+      });
     }
     return Array.from(names);
   }, [allVariants]);
@@ -205,6 +238,56 @@ export default function VariantSelector({
                 const targetVariant = availableVariants.find(isVariantAvailable) 
                   ?? availableVariants[0];
 
+                // Check if this is a color attribute and get color code
+                const isColorAttr = COLOR_ATTRIBUTES.includes(attrName);
+                const colorCode = targetVariant ? getColorCode(targetVariant) : null;
+
+                // Render color swatch for color attributes
+                if (isColorAttr && colorCode) {
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => targetVariant && onVariantChange(targetVariant.id)}
+                      disabled={!isAvailable}
+                      className={`relative w-10 h-10 rounded-full border-2 transition-all ${
+                        isSelected
+                          ? "border-blue-600 ring-2 ring-blue-300"
+                          : isAvailable
+                            ? "border-gray-300 hover:border-gray-400"
+                            : "border-gray-200 opacity-50 cursor-not-allowed"
+                      }`}
+                      style={{ backgroundColor: colorCode }}
+                      title={isAvailable ? option.value : `${option.value} (Out of stock)`}
+                    >
+                      {isSelected && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <svg
+                            className={`w-5 h-5 ${
+                              colorCode.toLowerCase() === "#ffffff" || colorCode.toLowerCase() === "#fff"
+                                ? "text-gray-800"
+                                : "text-white"
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      )}
+                      {!isAvailable && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                }
+
+                // Regular text button for non-color attributes
                 return (
                   <button
                     key={option.value}

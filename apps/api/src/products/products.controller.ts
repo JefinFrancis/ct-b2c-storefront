@@ -1,6 +1,7 @@
 /**
  * ProductsController — handles product listing and detail endpoints.
  * GET /api/v1/products — paginated product list with optional filters
+ * GET /api/v1/products/categories — all categories
  * GET /api/v1/products/:slug — single product by slug
  */
 import { Controller, Get, Param, Query } from "@nestjs/common";
@@ -25,6 +26,14 @@ export class ProductsController {
       sort,
       search,
     });
+  }
+
+  /**
+   * Get all categories for navigation/filtering.
+   */
+  @Get("categories")
+  getCategories() {
+    return this.productsService.getCategories();
   }
 
   @Get(":slug")

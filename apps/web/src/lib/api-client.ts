@@ -48,6 +48,14 @@ async function apiFetch<T>(
   return res.json() as Promise<T>;
 }
 
+/** Category type for navigation */
+interface Category {
+  id: string;
+  name: Record<string, string>;
+  slug: Record<string, string>;
+  parent?: string;
+}
+
 export const productsApi = {
   list: (p?: { limit?: number; offset?: number; category?: string; search?: string }) => {
     const params = new URLSearchParams();
@@ -61,6 +69,7 @@ export const productsApi = {
     );
   },
   getBySlug: (slug: string) => apiFetch<Product>(`/products/${slug}`),
+  getCategories: () => apiFetch<Category[]>(`/products/categories`),
 };
 
 export const cartApi = {

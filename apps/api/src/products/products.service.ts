@@ -161,4 +161,45 @@ export class ProductsService {
       ctError.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
+
+  /**
+   * Fetch all categories with Redis caching.
+   */
+  async getCategories() {
+    const cacheKey = "categories:all";
+
+    // Try cache first
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const api = this.ct.getApiRoot();
+
+      const response = await api
+        .categories()
+        .get({
+          queryArgs: {
+            limit: 100,
+            sort: "orderHint asc",
+          },
+        })
+        .execute();
+
+      const categories = response.body.results.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        parent: cat.parent?.id,
+      }));
+
+      // Cache for 10 minutes (categories change less frequently)
+      await this.redis.set(cacheKey, categories, 600);
+
+      return categories;
+    } catch (error) {
+      this.handleCtError(error, "Failed to fetch categories");
+    }
+  }
 }

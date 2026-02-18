@@ -27,6 +27,14 @@ function formatPrice(cents: number, currencyCode: string): string {
   }).format(cents / 100);
 }
 
+/** Extract string value from LocalizedString (preferring 'en' locale) */
+function getLocalizedString(
+  localized: { [locale: string]: string } | undefined
+): string {
+  if (!localized) return "";
+  return localized.en ?? localized["en-US"] ?? Object.values(localized)[0] ?? "";
+}
+
 export default function OrderDetailsPage() {
   const params = useParams();
   const orderId = params.id as string;
@@ -141,7 +149,7 @@ export default function OrderDetailsPage() {
                   {item.variant?.images?.[0]?.url ? (
                     <img
                       src={item.variant.images[0].url}
-                      alt={item.name}
+                      alt={getLocalizedString(item.name)}
                       className="w-20 h-20 object-cover rounded"
                     />
                   ) : (
@@ -150,7 +158,7 @@ export default function OrderDetailsPage() {
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium">{getLocalizedString(item.name)}</p>
                     {item.variant?.sku && (
                       <p className="text-sm text-gray-500">
                         SKU: {item.variant.sku}
@@ -198,7 +206,7 @@ export default function OrderDetailsPage() {
                   )}
                   <br />
                   {order.shippingAddress.city},{" "}
-                  {order.shippingAddress.state || order.shippingAddress.region}{" "}
+                  {order.shippingAddress.region}{" "}
                   {order.shippingAddress.postalCode}
                   <br />
                   {order.shippingAddress.country}
