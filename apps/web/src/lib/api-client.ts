@@ -5,7 +5,14 @@
  * Uses INTERNAL_API_URL for server-side calls (within Docker network)
  * and NEXT_PUBLIC_API_URL for client-side calls (browser).
  */
-import type { Product, Cart, Order, Customer } from "@ct-b2c/types";
+import type {
+  Product,
+  Cart,
+  Order,
+  Customer,
+  ShippingMethod,
+  SetShippingAddressInput,
+} from "@ct-b2c/types";
 
 // Server-side: use internal Docker hostname; browser: use public URL
 const getApiBase = () => {
@@ -77,6 +84,19 @@ export const cartApi = {
     }),
   removeItem: (id: string, lineItemId: string) =>
     apiFetch<Cart>(`/cart/${id}/items/${lineItemId}`, { method: "DELETE" }),
+  // Checkout methods
+  setShippingAddress: (id: string, address: SetShippingAddressInput) =>
+    apiFetch<Cart>(`/cart/${id}/shipping-address`, {
+      method: "POST",
+      body: JSON.stringify(address),
+    }),
+  getShippingMethods: (id: string) =>
+    apiFetch<ShippingMethod[]>(`/cart/${id}/shipping-methods`),
+  setShippingMethod: (id: string, shippingMethodId: string) =>
+    apiFetch<Cart>(`/cart/${id}/shipping-method`, {
+      method: "POST",
+      body: JSON.stringify({ shippingMethodId }),
+    }),
 };
 
 export const authApi = {
@@ -101,6 +121,12 @@ export const authApi = {
 
 export const ordersApi = {
   list: (token: string) => apiFetch<Order[]>(`/orders`, { token }),
+  get: (id: string) => apiFetch<Order>(`/orders/${id}`),
+  create: (cartId: string) =>
+    apiFetch<Order>(`/orders`, {
+      method: "POST",
+      body: JSON.stringify({ cartId }),
+    }),
 };
 
 export const customersApi = {

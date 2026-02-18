@@ -1,15 +1,15 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-17 — Agent Session 9 / Task 5.5 (Unit Tests for Features 1-4)
+2026-02-17 — Agent Session 10 / Task 6 (Feature 5: Checkout API + UI)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
-NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
-**Unit testing completed for all features** — 86 tests total (52 API + 34 Web).
+NestJS API and Next.js web. Features 1-5 complete (Products, PDP, Cart, Auth, Checkout).
+**Unit testing completed for all features** — 121 tests total (57 API + 64 Web).
 
 ## Completed Work
 
@@ -87,6 +87,25 @@ NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
 - [x] Store layout: AuthProvider wraps CartProvider
 - [x] TypeScript type check passes (both api and web)
 
+### ✅ Feature 5: Checkout API + Checkout UI (Task 6)
+- [x] packages/types/checkout.ts: ShippingMethod, SetShippingAddressInput, CheckoutStep types
+- [x] cart.service.ts: setShippingAddress(), getShippingMethods(), setShippingMethod()
+- [x] cart.controller.ts: POST /cart/:id/shipping-address, GET /cart/:id/shipping-methods, POST /cart/:id/shipping-method
+- [x] orders.service.ts: createFromCart() with validation (address, method, items required)
+- [x] orders.service.ts: findById() method for order retrieval
+- [x] orders.controller.ts: POST /orders (create order from cart), GET /orders/:id
+- [x] orders.module.ts: imports CartModule for service dependency
+- [x] api-client.ts: cartApi checkout methods + ordersApi.create/get
+- [x] CheckoutContext: multi-step state management (address → shipping → review)
+- [x] AddressForm component: shipping address input with validation
+- [x] ShippingMethodSelector component: shipping method selection with pricing
+- [x] OrderReview component: order summary before placing order
+- [x] OrderConfirmation component: success message with order details
+- [x] CheckoutSteps component: visual step indicator
+- [x] Checkout page: multi-step form with CheckoutProvider
+- [x] Unit tests: 10 API tests (orders.service.spec.ts), 30 Web tests
+- [x] TypeScript type check passes
+
 ### 🧪 Unit Testing Status
 > **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
 
@@ -96,13 +115,12 @@ NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
 | Feature 2: PDP | N/A | ✅ (via ProductCard) | Complete |
 | Feature 3: Cart API + UI | ✅ 15 tests | ✅ 15 tests | Complete |
 | Feature 4: Auth API + UI | ✅ 13 tests | ✅ 10 tests | Complete |
+| Feature 5: Checkout | ✅ 10 tests | ✅ 30 tests | Complete |
 | CustomersService | ✅ 5 tests | N/A | Complete |
-| OrdersService | ✅ 5 tests | N/A | Complete |
-| Feature 5: Checkout (future) | - | - | Will include tests |
 | Feature 6: Orders (future) | - | - | Will include tests |
 
 **Test Summary:**
-- Total: **86 tests** (52 API + 34 Web) — all passing ✅
+- Total: **121 tests** (57 API + 64 Web) — all passing ✅
 - API tests: Jest + @nestjs/testing
 - Web tests: Vitest + @testing-library/react
 
@@ -111,11 +129,14 @@ NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
 - `apps/api/src/auth/auth.service.spec.ts` (13 tests)
 - `apps/api/src/cart/cart.service.spec.ts` (15 tests)
 - `apps/api/src/customers/customers.service.spec.ts` (5 tests)
-- `apps/api/src/orders/orders.service.spec.ts` (5 tests)
+- `apps/api/src/orders/orders.service.spec.ts` (10 tests)
 - `apps/web/src/components/ProductCard.test.tsx` (9 tests)
 - `apps/web/src/components/MiniCart.test.tsx` (9 tests)
 - `apps/web/src/contexts/CartContext.test.tsx` (6 tests)
 - `apps/web/src/contexts/AuthContext.test.tsx` (10 tests)
+- `apps/web/src/contexts/CheckoutContext.test.tsx` (12 tests)
+- `apps/web/src/components/checkout/AddressForm.test.tsx` (8 tests)
+- `apps/web/src/components/checkout/ShippingMethodSelector.test.tsx` (10 tests)
 
 **Test Infrastructure:**
 - NestJS (apps/api): Jest configured via `@nestjs/testing`
@@ -135,12 +156,13 @@ NestJS API and Next.js web. Features 1-4 complete (Products, PDP, Cart, Auth).
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 5.5 (Unit Tests) complete. Branch `feature/CT-005-unit-tests` ready to push and PR → develop.
+Task 6 (Feature 5: Checkout) complete. Branch `feature/CT-006-checkout` ready to push and PR → develop.
 
-**Unit testing completed** — 86 tests covering all services, components, and contexts.
+**Feature 5 Checkout completed** — Full checkout flow with shipping address, shipping method, and order creation.
 
 Next agent session should pick up:
-1. Task 6: Feature 5 — Checkout API + Checkout UI (with tests)
+1. Task 7: Feature 6 — Orders History (My Orders page improvements)
+2. Consider Profile/Address management if needed
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)

@@ -70,4 +70,51 @@ export class CartController {
   removeItem(@Param("id") id: string, @Param("lineItemId") lineItemId: string) {
     return this.cartService.removeItem(id, lineItemId);
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Checkout endpoints
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Set shipping address on cart.
+   */
+  @Post(":id/shipping-address")
+  setShippingAddress(
+    @Param("id") id: string,
+    @Body()
+    body: {
+      firstName: string;
+      lastName: string;
+      streetName: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city: string;
+      region?: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) {
+    return this.cartService.setShippingAddress(id, body);
+  }
+
+  /**
+   * Get available shipping methods for cart.
+   */
+  @Get(":id/shipping-methods")
+  getShippingMethods(@Param("id") id: string) {
+    return this.cartService.getShippingMethods(id);
+  }
+
+  /**
+   * Set shipping method on cart.
+   */
+  @Post(":id/shipping-method")
+  setShippingMethod(
+    @Param("id") id: string,
+    @Body() body: { shippingMethodId: string },
+  ) {
+    return this.cartService.setShippingMethod(id, body.shippingMethodId);
+  }
 }

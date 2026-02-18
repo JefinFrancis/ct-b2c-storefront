@@ -156,4 +156,99 @@ export class CartService {
     await this.setCartIdForSession(sessionId, newCart.id);
     return newCart;
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Checkout methods: shipping address and shipping method
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Set shipping address on cart.
+   */
+  async setShippingAddress(
+    cartId: string,
+    address: {
+      firstName: string;
+      lastName: string;
+      streetName: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city: string;
+      region?: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "setShippingAddress",
+              address,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Get available shipping methods for a cart (based on shipping address).
+   */
+  async getShippingMethods(cartId: string) {
+    const api = this.ct.getApiRoot();
+    // Ensure cart exists and has a shipping address
+    await this.findById(cartId);
+
+    const response = await api
+      .shippingMethods()
+      .matchingCart()
+      .get({
+        queryArgs: {
+          cartId,
+        },
+      })
+      .execute();
+
+    return response.body.results;
+  }
+
+  /**
+   * Set shipping method on cart.
+   */
+  async setShippingMethod(cartId: string, shippingMethodId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "setShippingMethod",
+              shippingMethod: {
+                id: shippingMethodId,
+                typeId: "shipping-method",
+              },
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
 }

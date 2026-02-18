@@ -1,10 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { OrdersService } from "./orders.service";
 import { CommercetoolsService } from "../commercetools/commercetools.service";
+import { CartService } from "../cart/cart.service";
 
 describe("OrdersService", () => {
   let service: OrdersService;
   let ctService: jest.Mocked<CommercetoolsService>;
+  let cartService: jest.Mocked<CartService>;
 
   const mockOrders = [
     {
@@ -33,11 +35,18 @@ describe("OrdersService", () => {
             getApiRoot: jest.fn(),
           },
         },
+        {
+          provide: CartService,
+          useValue: {
+            findById: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<OrdersService>(OrdersService);
     ctService = module.get(CommercetoolsService);
+    cartService = module.get(CartService);
 
     jest.clearAllMocks();
   });
@@ -138,6 +147,101 @@ describe("OrdersService", () => {
           }),
         }),
       );
+    });
+  });
+
+  describe("createFromCart", () => {
+    const mockCart = {
+      id: "cart-123",
+      version: 1,
+      shippingAddress: { country: "US", city: "New York" },
+      shippingInfo: { shippingMethodName: "Standard" },
+      lineItems: [{ id: "line-1", productId: "prod-1" }],
+    };
+
+    const mockOrder = {
+      id: "order-new",
+      orderNumber: "ORD-NEW",
+      orderState: "Open",
+    };
+
+    it("should create an order from a valid cart", async () => {
+      cartService.findById.mockResolvedValue(mockCart as never);
+
+      const postMock = jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ body: mockOrder }),
+      });
+
+      const mockApi = {
+        orders: jest.fn().mockReturnValue({
+          post: postMock,
+        }),
+      };
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.createFromCart("cart-123");
+
+      expect(result).toEqual(mockOrder);
+      expect(postMock).toHaveBeenCalledWith({
+        body: {
+          cart: { id: "cart-123", typeId: "cart" },
+          version: 1,
+        },
+      });
+    });
+
+    it("should throw error if cart has no shipping address", async () => {
+      const cartWithoutAddress = { ...mockCart, shippingAddress: undefined };
+      cartService.findById.mockResolvedValue(cartWithoutAddress as never);
+
+      await expect(service.createFromCart("cart-123")).rejects.toThrow(
+        "Cart must have a shipping address before creating an order",
+      );
+    });
+
+    it("should throw error if cart has no shipping method", async () => {
+      const cartWithoutShipping = { ...mockCart, shippingInfo: undefined };
+      cartService.findById.mockResolvedValue(cartWithoutShipping as never);
+
+      await expect(service.createFromCart("cart-123")).rejects.toThrow(
+        "Cart must have a shipping method before creating an order",
+      );
+    });
+
+    it("should throw error if cart is empty", async () => {
+      const emptyCart = { ...mockCart, lineItems: [] };
+      cartService.findById.mockResolvedValue(emptyCart as never);
+
+      await expect(service.createFromCart("cart-123")).rejects.toThrow(
+        "Cart must have at least one item",
+      );
+    });
+  });
+
+  describe("findById", () => {
+    it("should return an order by ID", async () => {
+      const mockOrder = {
+        id: "order-1",
+        orderNumber: "ORD-001",
+        orderState: "Open",
+      };
+
+      const getMock = jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ body: mockOrder }),
+      });
+
+      const mockApi = {
+        orders: jest.fn().mockReturnValue({
+          withId: jest.fn().mockReturnValue({
+            get: getMock,
+          }),
+        }),
+      };
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.findById("order-1");
+
+      expect(result).toEqual(mockOrder);
     });
   });
 });

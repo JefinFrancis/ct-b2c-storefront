@@ -10,4 +10,5 @@ export * from "./product";
 export * from "./cart";
 export * from "./order";
 export * from "./customer";
+export * from "./checkout";
 export * from "./common";
