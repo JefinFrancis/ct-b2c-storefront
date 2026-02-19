@@ -100,6 +100,30 @@ export class CartController {
   }
 
   /**
+   * Set billing address on cart.
+   */
+  @Post(":id/billing-address")
+  setBillingAddress(
+    @Param("id") id: string,
+    @Body()
+    body: {
+      firstName: string;
+      lastName: string;
+      streetName: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city: string;
+      region?: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) {
+    return this.cartService.setBillingAddress(id, body);
+  }
+
+  /**
    * Get available shipping methods for cart.
    */
   @Get(":id/shipping-methods")
@@ -116,5 +140,39 @@ export class CartController {
     @Body() body: { shippingMethodId: string },
   ) {
     return this.cartService.setShippingMethod(id, body.shippingMethodId);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Discount code endpoints
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Add a discount code to the cart.
+   */
+  @Post(":id/discount-codes")
+  addDiscountCode(
+    @Param("id") id: string,
+    @Body() body: { code: string },
+  ) {
+    return this.cartService.addDiscountCode(id, body.code);
+  }
+
+  /**
+   * Remove a discount code from the cart.
+   */
+  @Delete(":id/discount-codes/:discountCodeId")
+  removeDiscountCode(
+    @Param("id") id: string,
+    @Param("discountCodeId") discountCodeId: string,
+  ) {
+    return this.cartService.removeDiscountCode(id, discountCodeId);
+  }
+
+  /**
+   * Recalculate cart (refresh prices, taxes, discounts).
+   */
+  @Post(":id/recalculate")
+  recalculate(@Param("id") id: string) {
+    return this.cartService.recalculate(id);
   }
 }

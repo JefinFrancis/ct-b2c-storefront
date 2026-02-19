@@ -5,6 +5,7 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 interface LoginDto {
   email: string;
   password: string;
+  anonymousCartId?: string;
 }
 
 interface RegisterDto {
@@ -12,6 +13,7 @@ interface RegisterDto {
   password: string;
   firstName: string;
   lastName: string;
+  anonymousCartId?: string;
 }
 
 @Controller("auth")
@@ -20,12 +22,12 @@ export class AuthController {
 
   @Post("login")
   login(@Body() body: LoginDto) {
-    return this.authService.login(body.email, body.password);
+    return this.authService.login(body.email, body.password, body.anonymousCartId);
   }
 
   @Post("register")
   register(@Body() body: RegisterDto) {
-    return this.authService.register(body);
+    return this.authService.register(body, body.anonymousCartId);
   }
 
   @Post("forgot-password")

@@ -1,6 +1,7 @@
 /**
  * AuthContext — manages authentication state across the application.
  * Handles login, register, logout, and token management.
+ * Supports cart merge on login/register via anonymousCartId.
  */
 "use client";
 
@@ -13,7 +14,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import type { Customer } from "@ct-b2c/types";
+import type { Customer, Cart } from "@ct-b2c/types";
 import { authApi } from "@/lib/api-client";
 
 // Storage keys
@@ -33,10 +34,11 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (email: string, password: string, anonymousCartId?: string) => Promise<Cart | null>;
+  register: (data: RegisterData, anonymousCartId?: string) => Promise<Cart | null>;
   logout: () => void;
   clearError: () => void;
+  refreshCustomer: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -111,19 +113,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initAuth();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  /**
+   * Login with optional cart merge.
+   * Returns the merged cart (if any) so CartContext can update.
+   */
+  const login = useCallback(async (email: string, password: string, anonymousCartId?: string): Promise<Cart | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const { token: authToken, customer: loggedInCustomer } = await authApi.login({
+      const { token: authToken, customer: loggedInCustomer, cart } = await authApi.login({
         email,
         password,
+        anonymousCartId,
       });
       
       storeToken(authToken);
       setToken(authToken);
       setCustomer(loggedInCustomer);
+      return cart ?? null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);
@@ -133,16 +141,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const register = useCallback(async (data: RegisterData) => {
+  /**
+   * Register with optional cart merge.
+   * Returns the merged cart (if any) so CartContext can update.
+   */
+  const register = useCallback(async (data: RegisterData, anonymousCartId?: string): Promise<Cart | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const { token: authToken, customer: registeredCustomer } = await authApi.register(data);
+      const { token: authToken, customer: registeredCustomer, cart } = await authApi.register({
+        ...data,
+        anonymousCartId,
+      });
       
       storeToken(authToken);
       setToken(authToken);
       setCustomer(registeredCustomer);
+      return cart ?? null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Registration failed";
       setError(message);
@@ -163,6 +179,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   }, []);
 
+  /**
+   * Refresh customer data from the server.
+   */
+  const refreshCustomer = useCallback(async () => {
+    if (!token) return;
+    try {
+      const fetchedCustomer = await authApi.getMe(token);
+      setCustomer(fetchedCustomer);
+    } catch (err) {
+      console.error("Failed to refresh customer:", err);
+    }
+  }, [token]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       customer,
@@ -174,8 +203,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       register,
       logout,
       clearError,
+      refreshCustomer,
     }),
-    [customer, token, isLoading, error, login, register, logout, clearError]
+    [customer, token, isLoading, error, login, register, logout, clearError, refreshCustomer]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,6 +1,7 @@
 /**
  * CartContext — manages cart state across the application.
- * Handles session ID generation, cart fetching, and cart operations.
+ * Handles session ID generation, cart fetching, cart operations,
+ * discount codes, and cart-customer merge on login.
  */
 "use client";
 
@@ -30,7 +31,15 @@ interface CartContextValue {
   ) => Promise<void>;
   updateQuantity: (lineItemId: string, quantity: number) => Promise<void>;
   removeItem: (lineItemId: string) => Promise<void>;
+  addDiscountCode: (code: string) => Promise<void>;
+  removeDiscountCode: (discountCodeId: string) => Promise<void>;
   refreshCart: () => Promise<void>;
+  /** Replace cart state (used after login merge) */
+  setMergedCart: (cart: Cart) => void;
+  /** Get current cart ID (for anonymous merge on login) */
+  getCartId: () => string | null;
+  /** Clear cart (used after order is placed or logout) */
+  clearCart: () => void;
   itemCount: number;
 }
 
@@ -139,7 +148,6 @@ export function CartProvider({ children }: CartProviderProps) {
 
       try {
         if (quantity <= 0) {
-          // Remove item if quantity is 0 or negative
           const updatedCart = await cartApi.removeItem(cart.id, lineItemId);
           setCart(updatedCart);
         } else {
@@ -177,11 +185,75 @@ export function CartProvider({ children }: CartProviderProps) {
   );
 
   /**
+   * Add a discount code to the cart.
+   */
+  const addDiscountCode = useCallback(
+    async (code: string) => {
+      if (!cart) {
+        throw new Error("Cart not initialized");
+      }
+
+      try {
+        const updatedCart = await cartApi.addDiscountCode(cart.id, code);
+        setCart(updatedCart);
+      } catch (err) {
+        console.error("Failed to add discount code:", err);
+        throw err;
+      }
+    },
+    [cart]
+  );
+
+  /**
+   * Remove a discount code from the cart.
+   */
+  const removeDiscountCode = useCallback(
+    async (discountCodeId: string) => {
+      if (!cart) {
+        throw new Error("Cart not initialized");
+      }
+
+      try {
+        const updatedCart = await cartApi.removeDiscountCode(
+          cart.id,
+          discountCodeId
+        );
+        setCart(updatedCart);
+      } catch (err) {
+        console.error("Failed to remove discount code:", err);
+        throw err;
+      }
+    },
+    [cart]
+  );
+
+  /**
    * Refresh cart from server.
    */
   const refreshCart = useCallback(async () => {
     await fetchCart();
   }, [fetchCart]);
+
+  /**
+   * Replace cart state with a merged cart (after login).
+   */
+  const setMergedCart = useCallback((mergedCart: Cart) => {
+    setCart(mergedCart);
+  }, []);
+
+  /**
+   * Get current cart ID (for anonymous→customer merge on login).
+   */
+  const getCartId = useCallback((): string | null => {
+    return cart?.id ?? null;
+  }, [cart]);
+
+  /**
+   * Clear cart state (after order placed or logout).
+   */
+  const clearCart = useCallback(() => {
+    setCart(null);
+  }, []);
 
   /**
    * Calculate total item count.
@@ -199,10 +271,29 @@ export function CartProvider({ children }: CartProviderProps) {
       addItem,
       updateQuantity,
       removeItem,
+      addDiscountCode,
+      removeDiscountCode,
       refreshCart,
+      setMergedCart,
+      getCartId,
+      clearCart,
       itemCount,
     }),
-    [cart, isLoading, error, addItem, updateQuantity, removeItem, refreshCart, itemCount]
+    [
+      cart,
+      isLoading,
+      error,
+      addItem,
+      updateQuantity,
+      removeItem,
+      addDiscountCode,
+      removeDiscountCode,
+      refreshCart,
+      setMergedCart,
+      getCartId,
+      clearCart,
+      itemCount,
+    ]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

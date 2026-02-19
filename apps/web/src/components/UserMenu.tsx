@@ -123,11 +123,11 @@ export default function UserMenu() {
               Order History
             </Link>
             <Link
-              href="/account/profile"
+              href="/account/wishlist"
               onClick={() => setIsOpen(false)}
               className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
             >
-              Profile
+              Wishlist
             </Link>
             <Link
               href="/account/addresses"
@@ -135,6 +135,13 @@ export default function UserMenu() {
               className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
             >
               Addresses
+            </Link>
+            <Link
+              href="/account/profile"
+              onClick={() => setIsOpen(false)}
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+            >
+              Profile
             </Link>
           </nav>
 

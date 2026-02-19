@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isAuthenticated, isLoading: authLoading, error: authError, clearError } = useAuth();
+  const { getCartId, setMergedCart } = useCart();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +52,12 @@ export default function LoginPage() {
     }
 
     try {
-      await login(email, password);
+      // Pass current anonymous cart ID for merge
+      const anonymousCartId = getCartId() ?? undefined;
+      const mergedCart = await login(email, password, anonymousCartId);
+      if (mergedCart) {
+        setMergedCart(mergedCart);
+      }
       router.push(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -140,5 +147,19 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center p-8">
+          <div className="animate-pulse text-gray-500">Loading...</div>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

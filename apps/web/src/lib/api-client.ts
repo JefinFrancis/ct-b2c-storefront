@@ -12,6 +12,8 @@ import type {
   Customer,
   ShippingMethod,
   SetShippingAddressInput,
+  Wishlist,
+  Payment,
 } from "@ct-b2c/types";
 
 // Server-side: use internal Docker hostname; browser: use public URL
@@ -99,6 +101,11 @@ export const cartApi = {
       method: "POST",
       body: JSON.stringify(address),
     }),
+  setBillingAddress: (id: string, address: SetShippingAddressInput) =>
+    apiFetch<Cart>(`/cart/${id}/billing-address`, {
+      method: "POST",
+      body: JSON.stringify(address),
+    }),
   getShippingMethods: (id: string) =>
     apiFetch<ShippingMethod[]>(`/cart/${id}/shipping-methods`),
   setShippingMethod: (id: string, shippingMethodId: string) =>
@@ -106,11 +113,24 @@ export const cartApi = {
       method: "POST",
       body: JSON.stringify({ shippingMethodId }),
     }),
+  // Discount codes
+  addDiscountCode: (id: string, code: string) =>
+    apiFetch<Cart>(`/cart/${id}/discount-codes`, {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+  removeDiscountCode: (id: string, discountCodeId: string) =>
+    apiFetch<Cart>(`/cart/${id}/discount-codes/${discountCodeId}`, {
+      method: "DELETE",
+    }),
+  // Recalculate
+  recalculate: (id: string) =>
+    apiFetch<Cart>(`/cart/${id}/recalculate`, { method: "POST" }),
 };
 
 export const authApi = {
-  login: (body: { email: string; password: string }) =>
-    apiFetch<{ token: string; customer: Customer }>(`/auth/login`, {
+  login: (body: { email: string; password: string; anonymousCartId?: string }) =>
+    apiFetch<{ token: string; customer: Customer; cart: Cart | null }>(`/auth/login`, {
       method: "POST",
       body: JSON.stringify(body),
     }),
@@ -119,8 +139,9 @@ export const authApi = {
     password: string;
     firstName: string;
     lastName: string;
+    anonymousCartId?: string;
   }) =>
-    apiFetch<{ token: string; customer: Customer }>(`/auth/register`, {
+    apiFetch<{ token: string; customer: Customer; cart: Cart | null }>(`/auth/register`, {
       method: "POST",
       body: JSON.stringify(body),
     }),
@@ -153,11 +174,112 @@ export const customersApi = {
   getMe: (token: string) => apiFetch<Customer>(`/customers/me`, { token }),
   updateMe: (
     token: string,
-    body: { firstName?: string; lastName?: string },
+    body: { firstName?: string; lastName?: string; dateOfBirth?: string; companyName?: string },
   ) =>
     apiFetch<Customer>(`/customers/me`, {
       token,
       method: "PATCH",
       body: JSON.stringify(body),
+    }),
+  // Address management
+  addAddress: (
+    token: string,
+    address: {
+      firstName?: string;
+      lastName?: string;
+      streetName?: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city?: string;
+      region?: string;
+      postalCode?: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) =>
+    apiFetch<Customer>(`/customers/me/addresses`, {
+      token,
+      method: "POST",
+      body: JSON.stringify(address),
+    }),
+  updateAddress: (
+    token: string,
+    addressId: string,
+    address: {
+      firstName?: string;
+      lastName?: string;
+      streetName?: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city?: string;
+      region?: string;
+      postalCode?: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) =>
+    apiFetch<Customer>(`/customers/me/addresses/${addressId}`, {
+      token,
+      method: "PATCH",
+      body: JSON.stringify(address),
+    }),
+  removeAddress: (token: string, addressId: string) =>
+    apiFetch<Customer>(`/customers/me/addresses/${addressId}`, {
+      token,
+      method: "DELETE",
+    }),
+  setDefaultShippingAddress: (token: string, addressId: string) =>
+    apiFetch<Customer>(`/customers/me/addresses/${addressId}/default-shipping`, {
+      token,
+      method: "POST",
+    }),
+  setDefaultBillingAddress: (token: string, addressId: string) =>
+    apiFetch<Customer>(`/customers/me/addresses/${addressId}/default-billing`, {
+      token,
+      method: "POST",
+    }),
+  changePassword: (
+    token: string,
+    body: { currentPassword: string; newPassword: string },
+  ) =>
+    apiFetch<Customer>(`/customers/me/password`, {
+      token,
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+};
+
+export const paymentsApi = {
+  processCheckout: (
+    token: string,
+    body: {
+      cartId: string;
+      amountCentAmount: number;
+      currencyCode: string;
+      paymentMethod?: string;
+    },
+  ) =>
+    apiFetch<{ payment: Payment; cart: Cart }>(`/payments/checkout`, {
+      token,
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  get: (id: string) => apiFetch<Payment>(`/payments/${id}`),
+};
+
+export const wishlistApi = {
+  get: (token: string) => apiFetch<Wishlist>(`/wishlist`, { token }),
+  addItem: (token: string, body: { productId: string; variantId?: number }) =>
+    apiFetch<Wishlist>(`/wishlist/items`, {
+      token,
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  removeItem: (token: string, lineItemId: string) =>
+    apiFetch<Wishlist>(`/wishlist/items/${lineItemId}`, {
+      token,
+      method: "DELETE",
     }),
 };

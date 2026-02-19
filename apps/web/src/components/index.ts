@@ -11,6 +11,8 @@ export { default as MiniCart } from "./MiniCart";
 export { default as UserMenu } from "./UserMenu";
 export { default as ProductSearch } from "./ProductSearch";
 export { default as CategoryFilter } from "./CategoryFilter";
+export { default as DiscountCodeInput } from "./DiscountCodeInput";
+export { default as WishlistButton } from "./WishlistButton";
 
 // Checkout components
 export * from "./checkout";

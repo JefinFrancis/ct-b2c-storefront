@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated, isLoading: authLoading, error: authError, clearError } = useAuth();
+  const { getCartId, setMergedCart } = useCart();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -57,12 +59,19 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-      });
+      const anonymousCartId = getCartId() ?? undefined;
+      const mergedCart = await register(
+        {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+        },
+        anonymousCartId
+      );
+      if (mergedCart) {
+        setMergedCart(mergedCart);
+      }
       router.push("/account/orders");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
