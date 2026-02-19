@@ -39,6 +39,7 @@ describe("OrdersService", () => {
           provide: CartService,
           useValue: {
             findById: jest.fn(),
+            setCustomerId: jest.fn(),
           },
         },
       ],
@@ -166,6 +167,7 @@ describe("OrdersService", () => {
     };
 
     it("should create an order from a valid cart", async () => {
+      cartService.setCustomerId.mockResolvedValue(mockCart as never);
       cartService.findById.mockResolvedValue(mockCart as never);
 
       const postMock = jest.fn().mockReturnValue({
@@ -179,9 +181,18 @@ describe("OrdersService", () => {
       };
       ctService.getApiRoot.mockReturnValue(mockApi as never);
 
-      const result = await service.createFromCart("cart-123");
+      const result = await service.createFromCart(
+        "cart-123",
+        "customer-123",
+        "john@example.com",
+      );
 
       expect(result).toEqual(mockOrder);
+      expect(cartService.setCustomerId).toHaveBeenCalledWith(
+        "cart-123",
+        "customer-123",
+        "john@example.com",
+      );
       expect(postMock).toHaveBeenCalledWith({
         body: {
           cart: { id: "cart-123", typeId: "cart" },
@@ -192,27 +203,36 @@ describe("OrdersService", () => {
 
     it("should throw error if cart has no shipping address", async () => {
       const cartWithoutAddress = { ...mockCart, shippingAddress: undefined };
+      cartService.setCustomerId.mockResolvedValue(cartWithoutAddress as never);
       cartService.findById.mockResolvedValue(cartWithoutAddress as never);
 
-      await expect(service.createFromCart("cart-123")).rejects.toThrow(
+      await expect(
+        service.createFromCart("cart-123", "customer-123", "john@example.com"),
+      ).rejects.toThrow(
         "Cart must have a shipping address before creating an order",
       );
     });
 
     it("should throw error if cart has no shipping method", async () => {
       const cartWithoutShipping = { ...mockCart, shippingInfo: undefined };
+      cartService.setCustomerId.mockResolvedValue(cartWithoutShipping as never);
       cartService.findById.mockResolvedValue(cartWithoutShipping as never);
 
-      await expect(service.createFromCart("cart-123")).rejects.toThrow(
+      await expect(
+        service.createFromCart("cart-123", "customer-123", "john@example.com"),
+      ).rejects.toThrow(
         "Cart must have a shipping method before creating an order",
       );
     });
 
     it("should throw error if cart is empty", async () => {
       const emptyCart = { ...mockCart, lineItems: [] };
+      cartService.setCustomerId.mockResolvedValue(emptyCart as never);
       cartService.findById.mockResolvedValue(emptyCart as never);
 
-      await expect(service.createFromCart("cart-123")).rejects.toThrow(
+      await expect(
+        service.createFromCart("cart-123", "customer-123", "john@example.com"),
+      ).rejects.toThrow(
         "Cart must have at least one item",
       );
     });

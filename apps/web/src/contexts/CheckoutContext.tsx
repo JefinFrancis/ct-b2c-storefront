@@ -20,6 +20,7 @@ import type {
   CheckoutStep,
 } from "@ct-b2c/types";
 import { cartApi, ordersApi } from "@/lib/api-client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CheckoutContextValue {
   // Current state
@@ -52,6 +53,7 @@ export function CheckoutProvider({
   children,
   initialCart = null,
 }: CheckoutProviderProps) {
+  const { token } = useAuth();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("address");
   const [cart, setCartState] = useState<Cart | null>(initialCart);
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
@@ -148,18 +150,22 @@ export function CheckoutProvider({
   );
 
   /**
-   * Place the order.
+   * Place the order. Requires authentication.
    */
   const placeOrder = useCallback(async () => {
     if (!cart) {
       throw new Error("No cart available");
     }
 
+    if (!token) {
+      throw new Error("You must be logged in to place an order");
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const createdOrder = await ordersApi.create(cart.id);
+      const createdOrder = await ordersApi.create(cart.id, token);
       setOrder(createdOrder);
       return createdOrder;
     } catch (err) {
@@ -170,7 +176,7 @@ export function CheckoutProvider({
     } finally {
       setIsLoading(false);
     }
-  }, [cart]);
+  }, [cart, token]);
 
   /**
    * Navigate to a specific step.

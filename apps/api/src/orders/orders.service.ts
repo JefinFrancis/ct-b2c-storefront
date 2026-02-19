@@ -29,9 +29,19 @@ export class OrdersService {
   /**
    * Create an order from a cart.
    * The cart must have a shipping address and shipping method set.
+   * Associates the cart with the customer before creating the order.
    */
-  async createFromCart(cartId: string) {
+  async createFromCart(
+    cartId: string,
+    customerId: string,
+    customerEmail: string,
+  ) {
     const api = this.ct.getApiRoot();
+
+    // Associate cart with customer (sets customerId + customerEmail on cart)
+    await this.cartService.setCustomerId(cartId, customerId, customerEmail);
+
+    // Re-fetch cart after customer association to get updated version
     const cart = await this.cartService.findById(cartId);
 
     // Validate cart is ready for checkout

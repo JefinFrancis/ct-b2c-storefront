@@ -68,7 +68,7 @@ export function OrderCard({ order }: OrderCardProps) {
               {item.variant?.images?.[0]?.url ? (
                 <img
                   src={item.variant.images[0].url}
-                  alt={item.name}
+                  alt={typeof item.name === 'string' ? item.name : Object.values(item.name)[0] ?? ''}
                   className="w-12 h-12 object-cover rounded"
                 />
               ) : (
@@ -77,7 +77,7 @@ export function OrderCard({ order }: OrderCardProps) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.name}</p>
+                <p className="text-sm font-medium truncate">{typeof item.name === 'string' ? item.name : Object.values(item.name)[0] ?? ''}</p>
                 <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
               </div>
               <p className="text-sm font-medium">

@@ -14,10 +14,19 @@ export class OrdersController {
   /**
    * Create an order from a cart.
    * Cart must have shipping address and shipping method set.
+   * Requires authentication — associates the order with the logged-in customer.
    */
   @Post()
-  createOrder(@Body() body: { cartId: string }) {
-    return this.ordersService.createFromCart(body.cartId);
+  @UseGuards(JwtAuthGuard)
+  createOrder(
+    @Body() body: { cartId: string },
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.ordersService.createFromCart(
+      body.cartId,
+      req.user.id,
+      req.user.email,
+    );
   }
 
   /**

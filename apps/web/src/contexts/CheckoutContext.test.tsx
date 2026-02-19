@@ -19,7 +19,24 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
+// Mock the AuthContext
+const mockToken = "test-jwt-token";
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: vi.fn(() => ({
+    token: mockToken,
+    customer: { id: "customer-123", email: "test@example.com" },
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    clearError: vi.fn(),
+  })),
+}));
+
 import { cartApi, ordersApi } from "@/lib/api-client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const mockCart: Cart = {
   id: "cart-123",
@@ -267,7 +284,7 @@ describe("CheckoutContext", () => {
   });
 
   describe("placeOrder", () => {
-    it("creates order from cart", async () => {
+    it("creates order from cart with auth token", async () => {
       (ordersApi.create as ReturnType<typeof vi.fn>).mockResolvedValue(mockOrder);
 
       let contextRef: ReturnType<typeof useCheckout> | null = null;
@@ -285,7 +302,47 @@ describe("CheckoutContext", () => {
 
       expect(order).toEqual(mockOrder);
       expect(contextRef!.order).toEqual(mockOrder);
-      expect(ordersApi.create).toHaveBeenCalledWith("cart-123");
+      expect(ordersApi.create).toHaveBeenCalledWith("cart-123", mockToken);
+    });
+
+    it("throws error when not logged in", async () => {
+      // Override the mock to return null token
+      (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+        token: null,
+        customer: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: vi.fn(),
+        clearError: vi.fn(),
+      });
+
+      let contextRef: ReturnType<typeof useCheckout> | null = null;
+
+      render(
+        <CheckoutProvider initialCart={mockCart}>
+          <TestConsumer onContext={(ctx) => (contextRef = ctx)} />
+        </CheckoutProvider>
+      );
+
+      await expect(contextRef!.placeOrder()).rejects.toThrow(
+        "You must be logged in to place an order"
+      );
+
+      // Restore the mock
+      (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+        token: mockToken,
+        customer: { id: "customer-123", email: "test@example.com" },
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: vi.fn(),
+        clearError: vi.fn(),
+      });
     });
 
     it("sets error on API failure", async () => {

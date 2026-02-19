@@ -356,4 +356,114 @@ describe("CartService", () => {
       expect(result).toEqual(mockCart);
     });
   });
+
+  describe("setCustomerId", () => {
+    it("should set customerId and customerEmail on cart", async () => {
+      const updatedCart = {
+        ...mockCart,
+        customerId: "customer-123",
+        customerEmail: "john@example.com",
+      };
+      const postMock = jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ body: updatedCart }),
+      });
+      const mockApi = {
+        carts: jest.fn().mockReturnValue({
+          withId: jest.fn().mockReturnValue({
+            get: jest.fn().mockReturnValue({
+              execute: jest.fn().mockResolvedValue({ body: mockCart }),
+            }),
+            post: postMock,
+          }),
+        }),
+      };
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.setCustomerId(
+        "cart-123",
+        "customer-123",
+        "john@example.com",
+      );
+
+      expect(result).toEqual(updatedCart);
+      expect(postMock).toHaveBeenCalledWith({
+        body: {
+          version: 1,
+          actions: [
+            { action: "setCustomerId", customerId: "customer-123" },
+            { action: "setCustomerEmail", email: "john@example.com" },
+          ],
+        },
+      });
+    });
+
+    it("should skip actions when customerId and email already match", async () => {
+      const existingCart = {
+        ...mockCart,
+        customerId: "customer-123",
+        customerEmail: "john@example.com",
+      };
+      const mockApi = {
+        carts: jest.fn().mockReturnValue({
+          withId: jest.fn().mockReturnValue({
+            get: jest.fn().mockReturnValue({
+              execute: jest.fn().mockResolvedValue({ body: existingCart }),
+            }),
+          }),
+        }),
+      };
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.setCustomerId(
+        "cart-123",
+        "customer-123",
+        "john@example.com",
+      );
+
+      // Should return existing cart without making a POST
+      expect(result).toEqual(existingCart);
+    });
+
+    it("should only set customerEmail when customerId already matches", async () => {
+      const existingCart = {
+        ...mockCart,
+        customerId: "customer-123",
+        customerEmail: "old@example.com",
+      };
+      const updatedCart = {
+        ...existingCart,
+        customerEmail: "new@example.com",
+      };
+      const postMock = jest.fn().mockReturnValue({
+        execute: jest.fn().mockResolvedValue({ body: updatedCart }),
+      });
+      const mockApi = {
+        carts: jest.fn().mockReturnValue({
+          withId: jest.fn().mockReturnValue({
+            get: jest.fn().mockReturnValue({
+              execute: jest.fn().mockResolvedValue({ body: existingCart }),
+            }),
+            post: postMock,
+          }),
+        }),
+      };
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.setCustomerId(
+        "cart-123",
+        "customer-123",
+        "new@example.com",
+      );
+
+      expect(result).toEqual(updatedCart);
+      expect(postMock).toHaveBeenCalledWith({
+        body: {
+          version: 1,
+          actions: [
+            { action: "setCustomerEmail", email: "new@example.com" },
+          ],
+        },
+      });
+    });
+  });
 });

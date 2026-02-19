@@ -247,6 +247,51 @@ export class CartService {
   }
 
   /**
+   * Set customer ID and email on cart.
+   * This associates an anonymous cart with a logged-in customer before order creation.
+   */
+  async setCustomerId(
+    cartId: string,
+    customerId: string,
+    customerEmail: string,
+  ) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const actions: Array<
+      | { action: "setCustomerId"; customerId: string }
+      | { action: "setCustomerEmail"; email: string }
+    > = [];
+
+    // Only set customerId if not already set
+    if (cart.customerId !== customerId) {
+      actions.push({ action: "setCustomerId", customerId });
+    }
+
+    // Always ensure customerEmail is set
+    if (cart.customerEmail !== customerEmail) {
+      actions.push({ action: "setCustomerEmail", email: customerEmail });
+    }
+
+    if (actions.length === 0) {
+      return cart; // Already associated
+    }
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions,
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
    * Set shipping method on cart.
    */
   async setShippingMethod(cartId: string, shippingMethodId: string) {

@@ -141,10 +141,11 @@ export const authApi = {
 export const ordersApi = {
   list: (token: string) => apiFetch<Order[]>(`/orders`, { token }),
   get: (id: string) => apiFetch<Order>(`/orders/${id}`),
-  create: (cartId: string) =>
+  create: (cartId: string, token: string) =>
     apiFetch<Order>(`/orders`, {
       method: "POST",
       body: JSON.stringify({ cartId }),
+      token,
     }),
 };
 
