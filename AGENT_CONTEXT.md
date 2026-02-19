@@ -1,13 +1,10 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-20 — Agent Session 15 / CI/CD + Public Repo Hardening
+2026-02-19 — Agent Session 14 / Comprehensive CT Integration
 
 ## Project State
-GitHub repository is now **public**, GitFlow branches (main, develop) pushed. CI/CD
-workflows added (CI, deploy-staging, deploy-production, security-scan) plus Dependabot.
-Community and security docs are in place (PR/issue templates, SECURITY, CONTRIBUTING,
-CODE_OF_CONDUCT) and README updated with badges and CI/CD secrets.
+GitHub repository created (private) with GitFlow branches (main, develop) pushed.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
@@ -183,14 +180,6 @@ Branch: `feature/ct-full-integration` merged to `develop`.
 - [x] **All tests updated**: auth test mocks (cart: null in responses), cart test mocks (getApiRoot instead of getAnonymousApiRoot), checkout test mocks (setBillingAddress, payment step)
 - [x] **41 files changed** (+2,817 / -64 lines), merged to develop
 
-### ✅ CI/CD + Public Repo Hardening (Session 15)
-- [x] GitHub Actions workflows: ci, deploy-staging, deploy-production, security-scan
-- [x] Dependabot config for npm, GitHub Actions, and Docker
-- [x] PR template and issue templates
-- [x] SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
-- [x] README updated with CI/CD badges and required secrets
-- [x] Repo visibility changed to public (branch protection unblocked)
-
 ### 🧪 Unit Testing Status
 > **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
 
@@ -247,20 +236,28 @@ Branch: `feature/ct-full-integration` merged to `develop`.
 Nothing in progress. All features, bugfixes, and CT integration complete.
 
 All planned B2C features (1-6) plus comprehensive CT integration are now complete. Next priorities:
-1. Apply branch protection rules + environment approvals now that repo is public
-2. Configure GitHub Actions secrets and test CI/deploy workflows
-3. GCP deployment when production-ready
+1. CI/CD pipeline implementation
+2. GCP deployment when production-ready
 3. Consider additional CT features (product reviews, categories page, search improvements)
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
-- **production** — approval required (reviewer: JefinFrancis), deploys restricted to `main`
+- **production** — created (no reviewers applied — see blocker below)
 
-### Branch Protection — Applied ✅
+### ⚠️ Branch Protection — BLOCKED (GitHub Free plan, private repo)
+Branch protection rules AND repository rulesets both require **GitHub Pro** (or a
+public repo). `gh` CLI v2.86.0 was used but the API returns HTTP 403.
+
+**Action required** — do ONE of the following, then apply these rules:
+1. Upgrade to GitHub Pro ($4/mo at github.com/settings/billing), OR
+2. Make the repo public (Settings → Danger Zone → Change visibility)
+
+Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - **main**: Require PR + 1 approval + CI status checks, no direct push, no force push
 - **develop**: Require PR + CI status checks, no direct push
-- **release/\*** + **hotfix/\***: Ruleset applied (CI required, no fast-forward, no deletion)
-- **production env**: JefinFrancis required reviewer, restricted to `main`
+- **release/\***: Require PR + CI status checks
+- **hotfix/\***: Require PR + CI status checks
+- **production env**: Add JefinFrancis as required reviewer, restrict to main branch
 
 ## Pending / Backlog
 
@@ -277,11 +274,12 @@ All planned B2C features (1-6) plus comprehensive CT integration are now complet
 10. ~~Cart merge on login (customers.login() flow)~~ ✅ Done in Session 14 (anonymousCartSignInMode)
 
 ### Production (do these when ready to go live)
-8. GCP project setup + Secret Manager
-9. Upstash Redis provisioning
-10. Cloud Run deployments
-11. Cloud CDN setup
-12. Release v1.0.0
+8. GitHub Actions CI/CD pipelines
+9. GCP project setup + Secret Manager
+10. Upstash Redis provisioning
+11. Cloud Run deployments
+12. Cloud CDN setup
+13. Release v1.0.0
 
 ## Architecture Decisions
 - Turborepo monorepo — shared types, single repo, smart build caching
@@ -373,7 +371,5 @@ All planned B2C features (1-6) plus comprehensive CT integration are now complet
 
 ## GitHub Info
 - Repo: https://github.com/JefinFrancis/ct-b2c-storefront
-- Visibility: public
-- Protected: main, develop, release/*, hotfix/* (branch protections + ruleset applied)
-- Environments: staging (auto-deploy), production (manual approval required, main-only)
-- Workflows: ci, deploy-staging, deploy-production, security-scan
+- Protected: main, develop, release/*, hotfix/*
+- Environments: staging (auto-deploy), production (manual approval required)
