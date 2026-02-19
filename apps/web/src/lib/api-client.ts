@@ -126,6 +126,16 @@ export const authApi = {
     }),
   getMe: (token: string) =>
     apiFetch<Customer>(`/auth/me`, { token }),
+  forgotPassword: (email: string) =>
+    apiFetch<{ message: string; tokenValue?: string }>(`/auth/forgot-password`, {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (tokenValue: string, newPassword: string) =>
+    apiFetch<{ message: string }>(`/auth/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ tokenValue, newPassword }),
+    }),
 };
 
 export const ordersApi = {

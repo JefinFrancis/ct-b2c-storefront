@@ -24,8 +24,8 @@ describe("AuthService", () => {
   const mockToken = "mock.jwt.token";
 
   const createMockApiRoot = (responseFn: () => unknown) => ({
-    me: jest.fn().mockReturnValue({
-      get: jest.fn().mockReturnValue({
+    login: jest.fn().mockReturnValue({
+      post: jest.fn().mockReturnValue({
         execute: responseFn,
       }),
     }),
@@ -35,6 +35,21 @@ describe("AuthService", () => {
       }),
       withId: jest.fn().mockReturnValue({
         get: jest.fn().mockReturnValue({
+          execute: responseFn,
+        }),
+      }),
+      passwordToken: jest.fn().mockReturnValue({
+        post: jest.fn().mockReturnValue({
+          execute: responseFn,
+        }),
+      }),
+      withPasswordToken: jest.fn().mockReturnValue({
+        get: jest.fn().mockReturnValue({
+          execute: responseFn,
+        }),
+      }),
+      passwordReset: jest.fn().mockReturnValue({
+        post: jest.fn().mockReturnValue({
           execute: responseFn,
         }),
       }),
@@ -76,16 +91,13 @@ describe("AuthService", () => {
   describe("login", () => {
     it("should return token and customer on valid credentials", async () => {
       const mockApi = createMockApiRoot(() =>
-        Promise.resolve({ body: mockCustomer }),
+        Promise.resolve({ body: { customer: mockCustomer } }),
       );
-      ctService.getCustomerApiRoot.mockReturnValue(mockApi as never);
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
 
       const result = await service.login("test@example.com", "password123");
 
-      expect(ctService.getCustomerApiRoot).toHaveBeenCalledWith(
-        "test@example.com",
-        "password123",
-      );
+      expect(ctService.getApiRoot).toHaveBeenCalled();
       expect(result).toEqual({
         token: mockToken,
         customer: mockCustomer,
@@ -100,7 +112,7 @@ describe("AuthService", () => {
       const mockApi = createMockApiRoot(() =>
         Promise.reject(new Error("Invalid credentials")),
       );
-      ctService.getCustomerApiRoot.mockReturnValue(mockApi as never);
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
 
       await expect(
         service.login("test@example.com", "wrongpassword"),
@@ -111,7 +123,7 @@ describe("AuthService", () => {
       const mockApi = createMockApiRoot(() =>
         Promise.reject({ statusCode: 401 }),
       );
-      ctService.getCustomerApiRoot.mockReturnValue(mockApi as never);
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
 
       await expect(
         service.login("test@example.com", "password"),
@@ -235,6 +247,54 @@ describe("AuthService", () => {
       });
 
       expect(() => service.verifyToken("invalid.token")).toThrow();
+    });
+  });
+
+  describe("forgotPassword", () => {
+    it("should return success message on valid email", async () => {
+      const mockApi = createMockApiRoot(() =>
+        Promise.resolve({ body: { value: "reset-token-123" } }),
+      );
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.forgotPassword("test@example.com");
+
+      expect(result.message).toContain("reset link has been sent");
+    });
+
+    it("should return success message even when email not found", async () => {
+      const mockApi = createMockApiRoot(() =>
+        Promise.reject(new Error("Customer not found")),
+      );
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.forgotPassword("nonexistent@example.com");
+
+      expect(result.message).toContain("reset link has been sent");
+    });
+  });
+
+  describe("resetPassword", () => {
+    it("should reset password with valid token", async () => {
+      const mockApi = createMockApiRoot(() =>
+        Promise.resolve({ body: mockCustomer }),
+      );
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      const result = await service.resetPassword("valid-token", "newpassword");
+
+      expect(result.message).toContain("reset successfully");
+    });
+
+    it("should throw UnauthorizedException with invalid token", async () => {
+      const mockApi = createMockApiRoot(() =>
+        Promise.reject(new Error("Token not found")),
+      );
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
+
+      await expect(
+        service.resetPassword("invalid-token", "newpassword"),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });

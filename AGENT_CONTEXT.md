@@ -1,16 +1,17 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-18 — Agent Session 11 / Task 8 (Bugfix: Web Functionality)
+2026-02-18 — Agent Session 12 / Task 9 (Bugfix: Checkout, Login, Forgot Password)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
-commercetool project (c-spire-oe-demo, US region) is configured with an Admin API
+commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
 NestJS API and Next.js web. Features 1-6 complete (Products, PDP, Cart, Auth, Checkout, Orders History).
-Bugfix release applied: CORS, search, category filter, variant selector, auth token.
-**Unit testing completed for all features** — 143 tests total (57 API + 86 Web).
+Bugfix releases applied: (1) CORS, search, category filter, variant selector, auth token;
+(2) Checkout shipping method mapping, login via CT login endpoint, forgot/reset password flow.
+**Unit testing completed for all features** — 147 tests total (61 API + 86 Web).
 
 ## Completed Work
 
@@ -129,6 +130,19 @@ Bugfix release applied: CORS, search, category filter, variant selector, auth to
 - [x] Order details page: LocalizedString helper, fixed Address.state → region
 - [x] All 143 tests pass (57 API + 86 Web)
 
+### ✅ Bugfix: Checkout, Login, Forgot Password (Task 9)
+- [x] ShippingMethodSelector crash: mapped CT zoneRates to flat ShippingMethod price in cart.service.ts
+- [x] Login 401 fix: switched from password flow (getCustomerApiRoot) to CT login() endpoint (admin API)
+- [x] Forgot password page: /account/forgot-password with email form and dev-mode token display
+- [x] Reset password page: /account/reset-password with token input, password validation, Suspense wrapper
+- [x] Auth API: POST /auth/forgot-password, POST /auth/reset-password endpoints
+- [x] auth.service.ts: forgotPassword() (password token + email enumeration prevention), resetPassword()
+- [x] api-client.ts: authApi.forgotPassword(), authApi.resetPassword() methods
+- [x] Login page: "Forgot password?" link now points to /account/forgot-password
+- [x] Auth unit tests updated: login test uses login().post() mock, 4 new tests for forgot/reset password
+- [x] CT customer password fix: recreated customer with proper password hash
+- [x] All 147 tests pass (61 API + 86 Web)
+
 ### 🧪 Unit Testing Status
 > **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
 
@@ -137,19 +151,19 @@ Bugfix release applied: CORS, search, category filter, variant selector, auth to
 | Feature 1: Products API + PLP | ✅ 14 tests | ✅ 9 tests | Complete |
 | Feature 2: PDP | N/A | ✅ (via ProductCard) | Complete |
 | Feature 3: Cart API + UI | ✅ 15 tests | ✅ 15 tests | Complete |
-| Feature 4: Auth API + UI | ✅ 13 tests | ✅ 10 tests | Complete |
+| Feature 4: Auth API + UI | ✅ 17 tests | ✅ 10 tests | Complete |
 | Feature 5: Checkout | ✅ 10 tests | ✅ 30 tests | Complete |
 | CustomersService | ✅ 5 tests | N/A | Complete |
 | Feature 6: Orders History | N/A (API exists) | ✅ 22 tests | Complete |
 
 **Test Summary:**
-- Total: **143 tests** (57 API + 86 Web) — all passing ✅
+- Total: **147 tests** (61 API + 86 Web) — all passing ✅
 - API tests: Jest + @nestjs/testing
 - Web tests: Vitest + @testing-library/react
 
 **Test Files Created:**
 - `apps/api/src/products/products.service.spec.ts` (14 tests)
-- `apps/api/src/auth/auth.service.spec.ts` (13 tests)
+- `apps/api/src/auth/auth.service.spec.ts` (17 tests)
 - `apps/api/src/cart/cart.service.spec.ts` (15 tests)
 - `apps/api/src/customers/customers.service.spec.ts` (5 tests)
 - `apps/api/src/orders/orders.service.spec.ts` (10 tests)

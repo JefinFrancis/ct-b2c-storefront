@@ -29,17 +29,23 @@ export class AuthService {
   ) {}
 
   /**
-   * Login existing customer using CT password flow.
+   * Login existing customer using CT customer sign-in endpoint.
+   * Uses the admin API root (client credentials) to authenticate
+   * the customer, avoiding the need for customer-specific OAuth scopes.
    * Returns customer data and JWT token.
    */
   async login(email: string, password: string) {
     try {
-      const api = this.ct.getCustomerApiRoot(email, password);
+      const api = this.ct.getApiRoot();
 
-      // Fetch the customer profile to validate credentials
-      const response = await api.me().get().execute();
+      const response = await api
+        .login()
+        .post({
+          body: { email, password },
+        })
+        .execute();
 
-      const customer = response.body;
+      const customer = response.body.customer;
       const token = this.jwtService.sign({
         sub: customer.id,
         email: customer.email,
@@ -118,5 +124,71 @@ export class AuthService {
    */
   verifyToken(token: string): JwtPayload {
     return this.jwtService.verify<JwtPayload>(token);
+  }
+
+  /**
+   * Request a password reset token for a customer email.
+   * In production, the token would be delivered via email.
+   * In development, the token value is returned for manual testing.
+   */
+  async forgotPassword(email: string) {
+    const api = this.ct.getApiRoot();
+
+    try {
+      const response = await api
+        .customers()
+        .passwordToken()
+        .post({
+          body: { email, ttlMinutes: 60 },
+        })
+        .execute();
+
+      const isDev = process.env.NODE_ENV !== "production";
+      return {
+        message: "If an account exists for that email, a reset link has been sent.",
+        // Only return token in development (no email service configured)
+        ...(isDev ? { tokenValue: response.body.value } : {}),
+      };
+    } catch {
+      // Always return success to prevent email enumeration
+      return {
+        message: "If an account exists for that email, a reset link has been sent.",
+      };
+    }
+  }
+
+  /**
+   * Reset customer password using a password-reset token.
+   */
+  async resetPassword(tokenValue: string, newPassword: string) {
+    const api = this.ct.getApiRoot();
+
+    try {
+      // Look up the customer by the password token
+      const tokenResponse = await api
+        .customers()
+        .withPasswordToken({ passwordToken: tokenValue })
+        .get()
+        .execute();
+
+      const customer = tokenResponse.body;
+
+      // Reset password using the token
+      await api
+        .customers()
+        .passwordReset()
+        .post({
+          body: {
+            tokenValue,
+            newPassword,
+            version: customer.version,
+          },
+        })
+        .execute();
+
+      return { message: "Password has been reset successfully." };
+    } catch {
+      throw new UnauthorizedException("Invalid or expired reset token.");
+    }
   }
 }

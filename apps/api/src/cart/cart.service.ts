@@ -204,6 +204,7 @@ export class CartService {
 
   /**
    * Get available shipping methods for a cart (based on shipping address).
+   * Maps CT zoneRates structure to a flat ShippingMethod shape.
    */
   async getShippingMethods(cartId: string) {
     const api = this.ct.getApiRoot();
@@ -220,7 +221,29 @@ export class CartService {
       })
       .execute();
 
-    return response.body.results;
+    // Map CT ShippingMethod → our flat ShippingMethod type
+    return response.body.results.map((m) => {
+      // Extract the first matching shipping rate price
+      const rate = m.zoneRates?.[0]?.shippingRates?.[0];
+      const price = rate?.price ?? {
+        currencyCode: "USD",
+        centAmount: 0,
+        fractionDigits: 2,
+      };
+
+      return {
+        id: m.id,
+        name: m.name ?? m.localizedName?.en ?? m.key ?? "Shipping",
+        description:
+          m.description ?? m.localizedDescription?.en ?? undefined,
+        price: {
+          currencyCode: price.currencyCode,
+          centAmount: price.centAmount,
+          fractionDigits: price.fractionDigits,
+        },
+        deliveryTime: undefined,
+      };
+    });
   }
 
   /**
