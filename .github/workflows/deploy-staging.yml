@@ -1,0 +1,191 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Deploy Staging — Auto-deploy develop branch to GCP Cloud Run (staging)
+# Triggers on push to develop (after PR merge)
+# ──────────────────────────────────────────────────────────────────────────────
+name: Deploy Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  GCP_REGION: us-central1
+  API_SERVICE_NAME: ct-b2c-api-staging
+  WEB_SERVICE_NAME: ct-b2c-web-staging
+
+jobs:
+  # ── CI Gate — only deploy if tests pass ──────────────────────────────────
+  ci:
+    name: CI Checks
+    uses: ./.github/workflows/ci.yml
+
+  # ── Build & Push Docker Images ───────────────────────────────────────────
+  build-and-push:
+    name: Build & Push Docker Images
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write  # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCP Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Set image tags
+        id: tags
+        run: |
+          REGISTRY="${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ct-b2c-images"
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "api_image=${REGISTRY}/api:${SHA_SHORT}" >> $GITHUB_OUTPUT
+          echo "api_latest=${REGISTRY}/api:staging" >> $GITHUB_OUTPUT
+          echo "web_image=${REGISTRY}/web:${SHA_SHORT}" >> $GITHUB_OUTPUT
+          echo "web_latest=${REGISTRY}/web:staging" >> $GITHUB_OUTPUT
+
+      - name: Build & Push API image
+        run: |
+          docker build \
+            -t ${{ steps.tags.outputs.api_image }} \
+            -t ${{ steps.tags.outputs.api_latest }} \
+            -f apps/api/Dockerfile \
+            apps/api
+          docker push ${{ steps.tags.outputs.api_image }}
+          docker push ${{ steps.tags.outputs.api_latest }}
+
+      - name: Build & Push Web image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_STAGING }} \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_STAGING }} \
+            -t ${{ steps.tags.outputs.web_image }} \
+            -t ${{ steps.tags.outputs.web_latest }} \
+            -f apps/web/Dockerfile \
+            apps/web
+          docker push ${{ steps.tags.outputs.web_image }}
+          docker push ${{ steps.tags.outputs.web_latest }}
+
+    outputs:
+      api_image: ${{ steps.tags.outputs.api_image }}
+      web_image: ${{ steps.tags.outputs.web_image }}
+
+  # ── Deploy API to Cloud Run ──────────────────────────────────────────────
+  deploy-api:
+    name: Deploy API to Cloud Run (Staging)
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Deploy API to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.API_SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ needs.build-and-push.outputs.api_image }}
+          flags: >-
+            --ingress=internal
+            --port=8080
+            --memory=512Mi
+            --cpu=1
+            --min-instances=0
+            --max-instances=3
+            --set-secrets=CTP_PROJECT_KEY=CTP_PROJECT_KEY:latest,CTP_CLIENT_ID=CTP_CLIENT_ID:latest,CTP_CLIENT_SECRET=CTP_CLIENT_SECRET:latest,CTP_AUTH_URL=CTP_AUTH_URL:latest,CTP_API_URL=CTP_API_URL:latest,CTP_SCOPES=CTP_SCOPES:latest,JWT_SECRET=JWT_SECRET:latest,UPSTASH_REDIS_REST_URL=UPSTASH_REDIS_REST_URL:latest,UPSTASH_REDIS_REST_TOKEN=UPSTASH_REDIS_REST_TOKEN:latest
+          env_vars: |
+            NODE_ENV=staging
+
+  # ── Deploy Web to Cloud Run ──────────────────────────────────────────────
+  deploy-web:
+    name: Deploy Web to Cloud Run (Staging)
+    needs: [build-and-push, deploy-api]
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Deploy Web to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.WEB_SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: ${{ needs.build-and-push.outputs.web_image }}
+          flags: >-
+            --ingress=all
+            --port=3000
+            --memory=512Mi
+            --cpu=1
+            --min-instances=0
+            --max-instances=5
+            --set-secrets=UPSTASH_REDIS_REST_URL=UPSTASH_REDIS_REST_URL:latest,UPSTASH_REDIS_REST_TOKEN=UPSTASH_REDIS_REST_TOKEN:latest
+          env_vars: |
+            NODE_ENV=staging
+
+  # ── Smoke Test ───────────────────────────────────────────────────────────
+  smoke-test:
+    name: Smoke Test (Staging)
+    needs: [deploy-api, deploy-web]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Health check — API
+        run: |
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.STAGING_API_URL }}/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ API health check passed"
+              exit 0
+            fi
+            echo "⏳ Attempt $i: API returned $STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "❌ API health check failed after 10 attempts"
+          exit 1
+
+      - name: Health check — Web
+        run: |
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.STAGING_WEB_URL }}" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Web health check passed"
+              exit 0
+            fi
+            echo "⏳ Attempt $i: Web returned $STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "❌ Web health check failed after 10 attempts"
+          exit 1

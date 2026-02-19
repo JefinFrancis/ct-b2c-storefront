@@ -1,5 +1,8 @@
 # CT B2C Storefront
 
+[![CI](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/ci.yml/badge.svg)](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/ci.yml)
+[![Security Scan](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/security-scan.yml)
+
 A composable commerce B2C storefront built with **commercetools**, **NestJS**, **Next.js**, and **Turborepo**.
 
 ## Architecture
@@ -155,6 +158,54 @@ ct-b2c-storefront/
 - **Branches**: `feature/*`, `bugfix/*`, `release/*`, `hotfix/*`
 - **Commits**: [Conventional Commits](https://www.conventionalcommits.org/) with scope prefix
 
+## CI/CD
+
+GitHub Actions workflows:
+
+- **CI**: lint, typecheck, tests, and build on all PRs and pushes to `develop`, `main`, `release/*`, `hotfix/*`
+- **Deploy Staging**: auto-deploy on push to `develop`
+- **Deploy Production**: manual workflow dispatch with approval
+- **Security Scan**: CodeQL, gitleaks, dependency audit, and license checks
+
+### GitHub Actions Secrets
+
+Configure these in **Settings → Secrets and variables → Actions**:
+
+**commercetools**
+- `CTP_PROJECT_KEY`
+- `CTP_CLIENT_ID`
+- `CTP_CLIENT_SECRET`
+- `CTP_AUTH_URL`
+- `CTP_API_URL`
+- `CTP_SCOPES`
+
+**JWT**
+- `JWT_SECRET`
+
+**GCP (Workload Identity)**
+- `GCP_PROJECT_ID`
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`
+- `GCP_SERVICE_ACCOUNT`
+
+**Artifact Registry**
+- `GCP_ARTIFACT_REGISTRY`
+
+**Upstash Redis**
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
+**App URLs**
+- `NEXT_PUBLIC_APP_URL_STAGING`
+- `NEXT_PUBLIC_APP_URL_PROD`
+- `NEXT_PUBLIC_API_URL_STAGING`
+- `NEXT_PUBLIC_API_URL_PROD`
+
+**Smoke tests**
+- `STAGING_API_URL`
+- `STAGING_WEB_URL`
+- `PROD_API_URL`
+- `PROD_WEB_URL`
+
 ## License
 
-Private — All rights reserved.
+Public repository — all rights reserved unless a LICENSE file is added.
