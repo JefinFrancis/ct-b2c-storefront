@@ -1,10 +1,12 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-19 — Agent Session 14 / Comprehensive CT Integration
+2026-02-20 — Agent Session 16 / CI/CD Rollback
 
 ## Project State
-GitHub repository created (private) with GitFlow branches (main, develop) pushed.
+GitHub repository is now **public**, GitFlow branches (main, develop) pushed. CI/CD
+workflows, templates, and governance docs were rolled back per request. Branch
+protections and rulesets were removed, and production environment approvals were cleared.
 commercetools project (c-spire-oe-demo, US region) is configured with an Admin API
 client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
@@ -244,15 +246,8 @@ All planned B2C features (1-6) plus comprehensive CT integration are now complet
 - **staging** — created (no protection rules, auto-deploy)
 - **production** — created (no reviewers applied — see blocker below)
 
-### ⚠️ Branch Protection — BLOCKED (GitHub Free plan, private repo)
-Branch protection rules AND repository rulesets both require **GitHub Pro** (or a
-public repo). `gh` CLI v2.86.0 was used but the API returns HTTP 403.
-
-**Action required** — do ONE of the following, then apply these rules:
-1. Upgrade to GitHub Pro ($4/mo at github.com/settings/billing), OR
-2. Make the repo public (Settings → Danger Zone → Change visibility)
-
-Once unblocked, apply these rules (via Settings → Branches or `gh api`):
+### Branch Protection — Not Applied
+Branch protections and rulesets were removed. Re-apply if CI/CD is reintroduced:
 - **main**: Require PR + 1 approval + CI status checks, no direct push, no force push
 - **develop**: Require PR + CI status checks, no direct push
 - **release/\***: Require PR + CI status checks
@@ -371,5 +366,6 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 
 ## GitHub Info
 - Repo: https://github.com/JefinFrancis/ct-b2c-storefront
-- Protected: main, develop, release/*, hotfix/*
-- Environments: staging (auto-deploy), production (manual approval required)
+- Visibility: public
+- Protected: none
+- Environments: staging (auto-deploy), production (no reviewers)
