@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-18 — Agent Session 12 / Task 9 (Bugfix: Checkout, Login, Forgot Password)
+2026-02-18 — Agent Session 13 / Task 10 (Bugfix: CT Order-Customer Association)
 
 ## Project State
 GitHub repository created (private) with GitFlow branches (main, develop) pushed.
@@ -10,8 +10,9 @@ client. Sample data seeded: 42 categories, 127 products, 4 product types, 1 tax
 category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
 NestJS API and Next.js web. Features 1-6 complete (Products, PDP, Cart, Auth, Checkout, Orders History).
 Bugfix releases applied: (1) CORS, search, category filter, variant selector, auth token;
-(2) Checkout shipping method mapping, login via CT login endpoint, forgot/reset password flow.
-**Unit testing completed for all features** — 147 tests total (61 API + 86 Web).
+(2) Checkout shipping method mapping, login via CT login endpoint, forgot/reset password flow;
+(3) Order-customer association — orders now properly linked to CT customer.
+**Unit testing completed for all features** — 151 tests total (64 API + 87 Web).
 
 ## Completed Work
 
@@ -143,6 +144,17 @@ Bugfix releases applied: (1) CORS, search, category filter, variant selector, au
 - [x] CT customer password fix: recreated customer with proper password hash
 - [x] All 147 tests pass (61 API + 86 Web)
 
+### ✅ Bugfix: CT Order-Customer Association (Task 10)
+- [x] Root cause: carts created anonymously → orders had no customerId → invisible in findByCustomer
+- [x] cart.service.ts: added setCustomerId() method (CT setCustomerId + setCustomerEmail actions)
+- [x] orders.controller.ts: POST /orders now protected by @UseGuards(JwtAuthGuard)
+- [x] orders.service.ts: createFromCart() accepts customerId/email, calls setCustomerId before order creation
+- [x] api-client.ts: ordersApi.create(cartId, token) now passes auth token
+- [x] CheckoutContext: imports useAuth, placeOrder() passes JWT token, validates login required
+- [x] OrderCard.tsx: fixed pre-existing LocalizedString type error in alt/name display
+- [x] Unit tests: 3 new CartService tests (setCustomerId), 1 new CheckoutContext test (login required)
+- [x] All 151 tests pass (64 API + 87 Web)
+
 ### 🧪 Unit Testing Status
 > **MANDATORY:** All features must include unit tests. See CT_AGENT_PROMPT.md for testing standards.
 
@@ -150,28 +162,28 @@ Bugfix releases applied: (1) CORS, search, category filter, variant selector, au
 |---------|-----------|-----------|--------|
 | Feature 1: Products API + PLP | ✅ 14 tests | ✅ 9 tests | Complete |
 | Feature 2: PDP | N/A | ✅ (via ProductCard) | Complete |
-| Feature 3: Cart API + UI | ✅ 15 tests | ✅ 15 tests | Complete |
+| Feature 3: Cart API + UI | ✅ 18 tests | ✅ 15 tests | Complete |
 | Feature 4: Auth API + UI | ✅ 17 tests | ✅ 10 tests | Complete |
-| Feature 5: Checkout | ✅ 10 tests | ✅ 30 tests | Complete |
+| Feature 5: Checkout | ✅ 14 tests | ✅ 31 tests | Complete |
 | CustomersService | ✅ 5 tests | N/A | Complete |
 | Feature 6: Orders History | N/A (API exists) | ✅ 22 tests | Complete |
 
 **Test Summary:**
-- Total: **147 tests** (61 API + 86 Web) — all passing ✅
+- Total: **151 tests** (64 API + 87 Web) — all passing ✅
 - API tests: Jest + @nestjs/testing
 - Web tests: Vitest + @testing-library/react
 
 **Test Files Created:**
 - `apps/api/src/products/products.service.spec.ts` (14 tests)
 - `apps/api/src/auth/auth.service.spec.ts` (17 tests)
-- `apps/api/src/cart/cart.service.spec.ts` (15 tests)
+- `apps/api/src/cart/cart.service.spec.ts` (18 tests)
 - `apps/api/src/customers/customers.service.spec.ts` (5 tests)
-- `apps/api/src/orders/orders.service.spec.ts` (10 tests)
+- `apps/api/src/orders/orders.service.spec.ts` (14 tests)
 - `apps/web/src/components/ProductCard.test.tsx` (9 tests)
 - `apps/web/src/components/MiniCart.test.tsx` (9 tests)
 - `apps/web/src/contexts/CartContext.test.tsx` (6 tests)
 - `apps/web/src/contexts/AuthContext.test.tsx` (10 tests)
-- `apps/web/src/contexts/CheckoutContext.test.tsx` (12 tests)
+- `apps/web/src/contexts/CheckoutContext.test.tsx` (13 tests)
 - `apps/web/src/components/checkout/AddressForm.test.tsx` (8 tests)
 - `apps/web/src/components/checkout/ShippingMethodSelector.test.tsx` (10 tests)
 - `apps/web/src/components/orders/OrderStatusBadge.test.tsx` (10 tests)
@@ -195,9 +207,7 @@ Bugfix releases applied: (1) CORS, search, category filter, variant selector, au
 - [ ] Cloud CDN configured
 
 ## In Progress
-Task 7 (Feature 6: Orders History) complete. Branch `feature/CT-007-orders-history` ready to push and PR → develop.
-
-**Feature 6 Orders History completed** — Full order history UI with status badges, order details page.
+Nothing in progress. All features and bugfixes complete.
 
 All planned B2C features (1-6) are now complete. Next priorities:
 1. Consider Profile/Address management (customer profile page)
@@ -272,6 +282,8 @@ Once unblocked, apply these rules (via Settings → Branches or `gh api`):
 - CT project locale is en-US (not en) — all localized strings must use en-US key
 - CT mutations always need current `version` — always fetch before mutating
 - Anonymous → customer cart merge must happen at login via customers.login()
+- Cart-customer association: setCustomerId is called at order creation time (not at login), so cart browsing is anonymous until checkout
+- Order creation requires authentication (JwtAuthGuard on POST /orders)
 - Turborepo: packages/* builds before apps/* — handled automatically via dependsOn in turbo.json
 - Next.js dual API URL: server-side uses INTERNAL_API_URL (Docker hostname), browser uses NEXT_PUBLIC_API_URL (localhost)
 - Hot reload: src volume mounts in docker-compose enable live reload without rebuilding
