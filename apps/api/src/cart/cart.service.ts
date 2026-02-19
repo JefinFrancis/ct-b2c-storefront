@@ -18,14 +18,20 @@ export class CartService {
     private readonly redis: RedisService,
   ) {}
 
-  async create() {
-    const api = this.ct.getAnonymousApiRoot();
+  /**
+   * Create a new cart using client credentials (admin API root).
+   * This ensures carts are always visible in the CT Merchant Center.
+   */
+  async create(customerId?: string, customerEmail?: string) {
+    const api = this.ct.getApiRoot();
     const response = await api
       .carts()
       .post({
         body: {
           currency: "USD",
           country: "US",
+          ...(customerId ? { customerId } : {}),
+          ...(customerEmail ? { customerEmail } : {}),
         },
       })
       .execute();
@@ -158,7 +164,7 @@ export class CartService {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Checkout methods: shipping address and shipping method
+  // Checkout methods: shipping/billing address and shipping method
   // ─────────────────────────────────────────────────────────────
 
   /**
@@ -192,6 +198,47 @@ export class CartService {
           actions: [
             {
               action: "setShippingAddress",
+              address,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Set billing address on cart.
+   */
+  async setBillingAddress(
+    cartId: string,
+    address: {
+      firstName: string;
+      lastName: string;
+      streetName: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city: string;
+      region?: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "setBillingAddress",
               address,
             },
           ],
@@ -318,5 +365,113 @@ export class CartService {
       .execute();
 
     return response.body;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Discount code methods
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Add a discount code to the cart.
+   */
+  async addDiscountCode(cartId: string, code: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "addDiscountCode",
+              code,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Remove a discount code from the cart.
+   */
+  async removeDiscountCode(cartId: string, discountCodeId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "removeDiscountCode",
+              discountCode: {
+                typeId: "discount-code",
+                id: discountCodeId,
+              },
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Recalculate the cart (e.g., after address change, tax recalculation).
+   */
+  async recalculate(cartId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "recalculate",
+              updateProductData: true,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Get the active cart for a customer (if any).
+   */
+  async findActiveCartByCustomer(customerId: string) {
+    const api = this.ct.getApiRoot();
+    try {
+      const response = await api
+        .carts()
+        .get({
+          queryArgs: {
+            where: `customerId="${customerId}" and cartState="Active"`,
+            sort: "lastModifiedAt desc",
+            limit: 1,
+          },
+        })
+        .execute();
+
+      return response.body.results[0] ?? null;
+    } catch {
+      return null;
+    }
   }
 }

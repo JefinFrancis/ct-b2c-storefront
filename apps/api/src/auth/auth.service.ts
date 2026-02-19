@@ -32,26 +32,41 @@ export class AuthService {
    * Login existing customer using CT customer sign-in endpoint.
    * Uses the admin API root (client credentials) to authenticate
    * the customer, avoiding the need for customer-specific OAuth scopes.
+   * If anonymousCartId is provided, merges it with the customer's cart.
    * Returns customer data and JWT token.
    */
-  async login(email: string, password: string) {
+  async login(email: string, password: string, anonymousCartId?: string) {
     try {
       const api = this.ct.getApiRoot();
 
       const response = await api
         .login()
         .post({
-          body: { email, password },
+          body: {
+            email,
+            password,
+            ...(anonymousCartId
+              ? {
+                  anonymousCart: {
+                    id: anonymousCartId,
+                    typeId: "cart",
+                  },
+                  anonymousCartSignInMode:
+                    "MergeWithExistingCustomerCart" as const,
+                }
+              : {}),
+          },
         })
         .execute();
 
       const customer = response.body.customer;
+      const cart = response.body.cart;
       const token = this.jwtService.sign({
         sub: customer.id,
         email: customer.email,
       });
 
-      return { token, customer };
+      return { token, customer, cart: cart ?? null };
     } catch {
       throw new UnauthorizedException("Invalid email or password");
     }
@@ -59,9 +74,10 @@ export class AuthService {
 
   /**
    * Register new customer and auto-login.
+   * If anonymousCartId is provided, associates it with the new customer.
    * Returns customer data and JWT token.
    */
-  async register(input: RegisterInput) {
+  async register(input: RegisterInput, anonymousCartId?: string) {
     const api = this.ct.getApiRoot();
 
     try {
@@ -73,17 +89,28 @@ export class AuthService {
             password: input.password,
             firstName: input.firstName,
             lastName: input.lastName,
+            ...(anonymousCartId
+              ? {
+                  anonymousCart: {
+                    id: anonymousCartId,
+                    typeId: "cart",
+                  },
+                  anonymousCartSignInMode:
+                    "MergeWithExistingCustomerCart" as const,
+                }
+              : {}),
           },
         })
         .execute();
 
       const customer = response.body.customer;
+      const cart = response.body.cart;
       const token = this.jwtService.sign({
         sub: customer.id,
         email: customer.email,
       });
 
-      return { token, customer };
+      return { token, customer, cart: cart ?? null };
     } catch (error: unknown) {
       const ctError = error as { body?: { statusCode?: number } };
       if (ctError.body?.statusCode === 400) {

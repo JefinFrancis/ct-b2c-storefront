@@ -13,8 +13,9 @@ interface CheckoutStepsProps {
 const STEPS: { key: CheckoutStep | "confirmation"; label: string }[] = [
   { key: "address", label: "Address" },
   { key: "shipping", label: "Shipping" },
+  { key: "payment", label: "Payment" },
   { key: "review", label: "Review" },
-  { key: "confirmation", label: "Confirmation" },
+  { key: "confirmation", label: "Done" },
 ];
 
 export function CheckoutSteps({ currentStep, hasOrder = false }: CheckoutStepsProps) {

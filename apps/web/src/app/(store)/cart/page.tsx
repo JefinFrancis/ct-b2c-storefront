@@ -7,6 +7,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
+import DiscountCodeInput from "@/components/DiscountCodeInput";
 
 /**
  * Format price from centAmount to display string.
@@ -358,6 +359,19 @@ export default function CartPage() {
                   </div>
                 )}
 
+                {cart.discountOnTotalPrice && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span className="font-medium">
+                      -
+                      {formatPrice(
+                        cart.discountOnTotalPrice.discountedAmount.centAmount,
+                        cart.discountOnTotalPrice.discountedAmount.currencyCode
+                      )}
+                    </span>
+                  </div>
+                )}
+
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between">
                     <span className="font-semibold text-gray-900">Total</span>
@@ -385,6 +399,14 @@ export default function CartPage() {
                 >
                   Continue Shopping
                 </Link>
+              </div>
+
+              {/* Discount Code */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  Discount Code
+                </h3>
+                <DiscountCodeInput />
               </div>
 
               {/* Trust Badges */}

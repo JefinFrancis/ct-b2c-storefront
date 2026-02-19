@@ -12,3 +12,5 @@ export * from "./order";
 export * from "./customer";
 export * from "./checkout";
 export * from "./common";
+export * from "./wishlist";
+export * from "./payment";

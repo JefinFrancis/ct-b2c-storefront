@@ -11,6 +11,7 @@ import type { Cart, ShippingMethod, Order } from "@ct-b2c/types";
 vi.mock("@/lib/api-client", () => ({
   cartApi: {
     setShippingAddress: vi.fn(),
+    setBillingAddress: vi.fn(),
     getShippingMethods: vi.fn(),
     setShippingMethod: vi.fn(),
   },
@@ -151,6 +152,9 @@ describe("CheckoutContext", () => {
       (cartApi.setShippingAddress as ReturnType<typeof vi.fn>).mockResolvedValue(
         updatedCart
       );
+      (cartApi.setBillingAddress as ReturnType<typeof vi.fn>).mockResolvedValue(
+        updatedCart
+      );
 
       let contextRef: ReturnType<typeof useCheckout> | null = null;
 
@@ -278,7 +282,7 @@ describe("CheckoutContext", () => {
         await contextRef!.selectShippingMethod("sm-1");
       });
 
-      expect(screen.getByTestId("step")).toHaveTextContent("review");
+      expect(screen.getByTestId("step")).toHaveTextContent("payment");
       expect(contextRef!.selectedShippingMethodId).toBe("sm-1");
     });
   });

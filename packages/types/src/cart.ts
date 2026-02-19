@@ -34,11 +34,27 @@ export interface LineItem {
   }>;
 }
 
+/** Discount code info on cart */
+export interface DiscountCodeInfo {
+  discountCode: {
+    id: string;
+    typeId: "discount-code";
+  };
+  state:
+    | "MatchesCart"
+    | "DoesNotMatchCart"
+    | "MaxApplicationReached"
+    | "ApplicationStoppedByPreviousDiscount"
+    | "NotValid"
+    | "NotActive";
+}
+
 /** Shopping cart */
 export interface Cart {
   id: string;
   version: number;
   customerId?: string;
+  customerEmail?: string;
   anonymousId?: string;
   lineItems: LineItem[];
   totalPrice: Money;
@@ -53,6 +69,17 @@ export interface Cart {
   shippingInfo?: {
     shippingMethodName: string;
     price: Money;
+  };
+  discountCodes?: DiscountCodeInfo[];
+  discountOnTotalPrice?: {
+    discountedAmount: Money;
+    includedDiscounts: Array<{
+      discount: { id: string };
+      discountedAmount: Money;
+    }>;
+  };
+  paymentInfo?: {
+    payments: Array<{ id: string; typeId: "payment" }>;
   };
   cartState: "Active" | "Merged" | "Ordered" | "Frozen";
   country?: string;

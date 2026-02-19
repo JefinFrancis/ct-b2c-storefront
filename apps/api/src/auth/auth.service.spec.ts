@@ -101,6 +101,7 @@ describe("AuthService", () => {
       expect(result).toEqual({
         token: mockToken,
         customer: mockCustomer,
+        cart: null,
       });
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: mockCustomer.id,
@@ -148,6 +149,7 @@ describe("AuthService", () => {
       expect(result).toEqual({
         token: mockToken,
         customer: mockCustomer,
+        cart: null,
       });
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: mockCustomer.id,

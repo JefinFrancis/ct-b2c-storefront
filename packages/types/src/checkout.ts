@@ -68,4 +68,4 @@ export interface CheckoutState {
 }
 
 /** Step in multi-step checkout */
-export type CheckoutStep = "address" | "shipping" | "review";
+export type CheckoutStep = "address" | "shipping" | "payment" | "review";

@@ -71,12 +71,12 @@ describe("CartService", () => {
   describe("create", () => {
     it("should create a new cart with USD currency", async () => {
       const mockApi = createMockApiRoot();
-      ctService.getAnonymousApiRoot.mockReturnValue(mockApi as never);
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
 
       const result = await service.create();
 
       expect(result).toEqual(mockCart);
-      expect(ctService.getAnonymousApiRoot).toHaveBeenCalled();
+      expect(ctService.getApiRoot).toHaveBeenCalled();
     });
   });
 
@@ -286,13 +286,12 @@ describe("CartService", () => {
       const result = await service.getOrCreateCartForSession("session-abc");
 
       expect(result).toEqual(mockCart);
-      expect(ctService.getAnonymousApiRoot).not.toHaveBeenCalled();
     });
 
     it("should create new cart when session has no cart", async () => {
       redisService.get.mockResolvedValue(null);
       const mockApi = createMockApiRoot();
-      ctService.getAnonymousApiRoot.mockReturnValue(mockApi as never);
+      ctService.getApiRoot.mockReturnValue(mockApi as never);
       redisService.set.mockResolvedValue(undefined);
 
       const result = await service.getOrCreateCartForSession("new-session");
@@ -321,7 +320,6 @@ describe("CartService", () => {
         }),
       };
       ctService.getApiRoot.mockReturnValue(mockApi as never);
-      ctService.getAnonymousApiRoot.mockReturnValue(mockApi as never);
 
       const result = await service.getOrCreateCartForSession("session-abc");
 
@@ -339,17 +337,12 @@ describe("CartService", () => {
               execute: jest.fn().mockResolvedValue({ body: orderedCart }),
             }),
           }),
-        }),
-      };
-      const mockCreateApi = {
-        carts: jest.fn().mockReturnValue({
           post: jest.fn().mockReturnValue({
             execute: jest.fn().mockResolvedValue({ body: mockCart }),
           }),
         }),
       };
       ctService.getApiRoot.mockReturnValue(mockGetApi as never);
-      ctService.getAnonymousApiRoot.mockReturnValue(mockCreateApi as never);
 
       const result = await service.getOrCreateCartForSession("session-abc");
 
