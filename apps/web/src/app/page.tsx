@@ -1,27 +1,42 @@
-import Link from "next/link";
+/**
+ * Homepage — Server Component that assembles the storefront landing page.
+ * Fetches categories and trending products server-side for instant load.
+ */
+import { productsApi } from "@/lib/api-client";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import HeroSection from "@/components/home/HeroSection";
+import FeaturedCategories from "@/components/home/FeaturedCategories";
+import TrendingProducts from "@/components/home/TrendingProducts";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import NewsletterSection from "@/components/home/NewsletterSection";
 
-export default function Home() {
+export default async function HomePage() {
+  let categories: Array<{ id: string; name: Record<string, string>; slug: Record<string, string>; parent?: string }> = [];
+  let trendingProducts: Awaited<ReturnType<typeof productsApi.list>>["results"] = [];
+
+  try {
+    const [catRes, prodRes] = await Promise.all([
+      productsApi.getCategories(),
+      productsApi.list({ limit: 10, offset: 0 }),
+    ]);
+    categories = catRes;
+    trendingProducts = prodRes.results;
+  } catch {
+    // Non-fatal — page renders with empty sections
+  }
+
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-8">CT B2C Storefront</h1>
-      <p className="text-gray-600 mb-8 text-center max-w-md">
-        commercetools-powered headless commerce storefront built with Next.js
-        and NestJS.
-      </p>
-      <div className="flex gap-4">
-        <Link
-          href="/products"
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Browse Products
-        </Link>
-        <Link
-          href="/account/login"
-          className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-        >
-          Sign In
-        </Link>
-      </div>
-    </main>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
+      <Header categories={categories} />
+      <main className="flex-1">
+        <HeroSection />
+        <FeaturedCategories categories={categories} />
+        <TrendingProducts products={trendingProducts} />
+        <TestimonialsSection />
+        <NewsletterSection />
+      </main>
+      <Footer />
+    </div>
   );
 }
