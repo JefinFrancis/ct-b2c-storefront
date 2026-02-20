@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-20 — Agent Session 17 / Feature 7: Storefront UX Upgrade
+2026-02-20 — Agent Session 18 / Bugfix: Missing Profile Page + Follow-up Updates
 
 ## Project State
 GitHub repository is now **public**, GitFlow branches (main, develop) pushed. CI/CD
@@ -13,11 +13,13 @@ category, 2 zones, 2 shipping methods. Turborepo monorepo scaffold complete with
 NestJS API and Next.js web. Features 1-7 complete (Products, PDP, Cart, Auth, Checkout, Orders History, Category Pages + Homepage + UI/UX Refresh).
 Bugfix releases applied: (1) CORS, search, category filter, variant selector, auth token;
 (2) Checkout shipping method mapping, login via CT login endpoint, forgot/reset password flow;
-(3) Order-customer association — orders now properly linked to CT customer.
+(3) Order-customer association — orders now properly linked to CT customer;
+(4) Missing profile page — `/account/profile` route now fully functional with customer data display and edit capability.
 **Comprehensive CT integration** — addresses, payments, wishlist, discount codes, cart merge, billing address.
 Branch: `feature/ct-full-integration` merged to `develop`.
 **Unit testing completed for all features** — 151 tests total (64 API + 87 Web).
 **Storefront UX upgrade complete** — Category pages (/category/[...slug]), new homepage (hero, categories, trending products, testimonials, newsletter), full UI/UX refresh (brand colors, dark mode, new Header, Footer, ThemeToggle), updated ProductCard and PLP styling.
+**Feature branch**: `feature/add-profile-page` created and pushed for profile page feature.
 
 ## Completed Work
 
@@ -204,6 +206,15 @@ Branch: `feature/ct-full-integration` merged to `develop`.
 - [x] **Shared formatPrice utility** (`lib/format-price.ts`): deduplicates price formatting across components
 - [x] **All 87 web tests pass** — no regressions
 - [x] **Build passes** — Next.js production build succeeds (14 routes)
+
+### ✅ Bugfix: Missing Profile Page (Session 18)
+- [x] **Root cause**: `/account/profile` route referenced in UserMenu and middleware but page component was missing (404 error)
+- [x] **Profile page created** (`apps/web/src/app/(store)/account/profile/page.tsx`): server + client-side auth check, customer data display, edit form (firstName, lastName)
+- [x] **Profile features**: read-only email, member-since date, edit/save/cancel actions, account navigation links
+- [x] **Tests**: no new tests required (uses existing AuthContext, auth patterns established)
+- [x] **Middleware**: profile route already protected by `/account/profile` matcher
+- [x] **Feature branch**: `feature/add-profile-page` created and pushed
+- [x] **Build passes**: No regressions in existing tests or build
 
 ### 🧪 Unit Testing Status
 
