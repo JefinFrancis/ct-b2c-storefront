@@ -36,7 +36,7 @@
 | **CI/CD** | GitHub Actions (Full GitOps — PR checks + staging + prod) |
 | **GCP** | Configured only when production-ready — skipped for local dev |
 | **Git Flow** | GitFlow (main / develop / release / hotfix) |
-| **B2C Scope** | Product Listing, PDP, Cart, Checkout, Auth, Order History |
+| **B2C Scope** | Product Listing, PDP, Cart, Checkout, Auth, Order History, Category Pages, Homepage, UI/UX Refresh |
 
 ---
 
@@ -1634,6 +1634,15 @@ Before any feature, define all shared types: `Product`, `Cart`, `CartLineItem`, 
 - **API**: `GET /orders` (JWT protected, uses `me.orders.get()`)
 - **Web**: `/account/orders`, order list with status badges
 
+### Feature 7: Category Pages + Homepage + UI/UX Refresh
+- **Web**: Dedicated category pages with nested slug support (e.g., `/category/[...slug]`)
+- **Web**: New homepage (hero, trending products, testimonials, newsletter)
+- **Web**: Global UI/UX refresh suitable for a generic B2C storefront
+- **Web**: Footer across all pages
+- **Web**: Modular, reusable UI component system for the store
+- **Web**: Theme support (light + dark)
+- **API**: Reuse existing products/categories endpoints; add any missing query helpers only if needed
+
 ---
 
 ## ✅ Phase 6 — Quality & Conventions
@@ -1828,6 +1837,7 @@ Nothing yet.
 | **8** | Auth: API (JWT) + login/register UI + middleware | `api` + `web` | `feature/CT-004-auth` → `develop` | Local |
 | **9** | Checkout: API endpoints + multi-step checkout UI | `api` + `web` | `feature/CT-005-checkout` → `develop` | Local |
 | **10** | Orders: API (me.orders) + Order History page | `api` + `web` | `feature/CT-006-orders` → `develop` | Local |
+| **11** | Category pages + homepage + UI/UX refresh | `web` | `feature/CT-007-storefront-ux` → `develop` | Local |
 | **—** | *(When ready for production)* | | | |
 | **P1** | GitHub Actions: ci.yml, deploy-staging.yml, deploy-prod.yml | `.github/` | `chore/cicd` → `develop` | GCP |
 | **P2** | GCP: project, Artifact Registry, SA, Workload Identity, Secret Manager | — | `chore/gcp-setup` → `develop` | GCP |

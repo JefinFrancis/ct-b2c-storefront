@@ -17,6 +17,8 @@ Bugfix releases applied: (1) CORS, search, category filter, variant selector, au
 **Comprehensive CT integration** — addresses, payments, wishlist, discount codes, cart merge, billing address.
 Branch: `feature/ct-full-integration` merged to `develop`.
 **Unit testing completed for all features** — 151 tests total (64 API + 87 Web).
+New requirements added: dedicated category pages (including nested sub-categories),
+a new homepage, and a full UI/UX refresh suitable for a generic B2C storefront.
 
 ## Completed Work
 
@@ -238,9 +240,11 @@ Branch: `feature/ct-full-integration` merged to `develop`.
 Nothing in progress. All features, bugfixes, and CT integration complete.
 
 All planned B2C features (1-6) plus comprehensive CT integration are now complete. Next priorities:
-1. CI/CD pipeline implementation
-2. GCP deployment when production-ready
-3. Consider additional CT features (product reviews, categories page, search improvements)
+1. Implement category pages (including nested sub-categories)
+2. Build a new homepage
+3. Full UI/UX refresh for a generic B2C storefront
+4. CI/CD pipeline implementation
+5. GCP deployment when production-ready
 
 ### GitHub Environments — Created ✅
 - **staging** — created (no protection rules, auto-deploy)
@@ -255,6 +259,14 @@ Branch protections and rulesets were removed. Re-apply if CI/CD is reintroduced:
 - **production env**: Add JefinFrancis as required reviewer, restrict to main branch
 
 ## Pending / Backlog
+
+### Storefront UX upgrade (work on these now)
+1. Category pages with nested paths (e.g., /category/[...slug]) and SEO metadata
+2. New homepage (hero, trending products, testimonials, newsletter)
+3. Full UI/UX refresh (global layout, typography, color system, key components)
+4. Footer across all pages
+5. Modular, reusable UI component system
+6. Theme support (light + dark)
 
 ### Local development (work on these now)
 1. ~~packages/types — define all shared API contract types~~ ✅ Done in Task 1
