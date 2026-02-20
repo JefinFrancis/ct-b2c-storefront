@@ -1,25 +1,15 @@
 /**
  * ProductCard — displays a product tile with image, name, and price.
- * Used on the Product Listing Page (PLP).
+ * Used on the Product Listing Page (PLP) and category pages.
  */
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@ct-b2c/types";
+import { formatPrice } from "@/lib/format-price";
 
 interface ProductCardProps {
   product: Product;
   locale?: string;
-}
-
-/**
- * Format price from commercetools centAmount to display string.
- */
-function formatPrice(centAmount: number, currencyCode: string): string {
-  const amount = centAmount / 100;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currencyCode,
-  }).format(amount);
 }
 
 /**
@@ -63,16 +53,17 @@ export default function ProductCard({ product, locale = "en-US" }: ProductCardPr
   return (
     <Link
       href={`/products/${slug}`}
-      className="group block border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+      className="group block bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-brand-200 dark:hover:border-brand-800 hover:shadow-lg transition-all duration-200"
     >
-      <div className="aspect-square bg-gray-100 relative overflow-hidden">
+      <div className="aspect-square bg-gray-50 dark:bg-gray-800 relative overflow-hidden">
         {isPlaceholder ? (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
             <svg
               className="w-16 h-16"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -93,10 +84,10 @@ export default function ProductCard({ product, locale = "en-US" }: ProductCardPr
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+        <h3 className="font-medium text-gray-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors text-sm">
           {name}
         </h3>
-        <p className="mt-1 text-lg font-semibold text-gray-900">
+        <p className="mt-1.5 text-base font-semibold text-gray-900 dark:text-white">
           {price ? formatPrice(price.centAmount, price.currencyCode) : "Price unavailable"}
         </p>
       </div>

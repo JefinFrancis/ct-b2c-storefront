@@ -14,6 +14,18 @@ export { default as CategoryFilter } from "./CategoryFilter";
 export { default as DiscountCodeInput } from "./DiscountCodeInput";
 export { default as WishlistButton } from "./WishlistButton";
 
+// Layout components
+export { default as Header } from "./layout/Header";
+export { default as Footer } from "./layout/Footer";
+export { default as ThemeToggle } from "./layout/ThemeToggle";
+
+// Homepage sections
+export { default as HeroSection } from "./home/HeroSection";
+export { default as FeaturedCategories } from "./home/FeaturedCategories";
+export { default as TrendingProducts } from "./home/TrendingProducts";
+export { default as TestimonialsSection } from "./home/TestimonialsSection";
+export { default as NewsletterSection } from "./home/NewsletterSection";
+
 // Checkout components
 export * from "./checkout";
 
