@@ -83,6 +83,36 @@ Before writing any code, **always read these files first**:
 6. **Follow GitFlow** — Branch from `develop`, use `feature/CT-<id>-description` or `chore/description` naming.
 7. **Conventional Commits** — `feat(api/cart): add endpoint`, `fix(web/auth): resolve redirect`, `test(api/orders): add service tests`.
 
+## Mandatory Git & Documentation Workflow (ALL Agents MUST Follow)
+
+> **These steps are NON-NEGOTIABLE for every agent session that modifies code or documents.**
+> They apply to ALL BMAD workflows (dev-story, quick-dev, quick-spec, QA, etc.) and any ad-hoc coding task.
+
+### Before Writing Any Code
+1. **Read `AGENT_CONTEXT.md`** — Understand current project state before making changes.
+2. **Create a new branch** — Run `git checkout -b <branch-name>` from `develop`. Branch naming:
+   - Features: `feature/CT-<id>-<short-description>` (e.g., `feature/CT-8-cicd-pipeline`)
+   - Chores: `chore/<short-description>` (e.g., `chore/update-dependencies`)
+   - Fixes: `fix/<short-description>` (e.g., `fix/cart-session-expiry`)
+   - Never commit directly to `develop` or `main`.
+
+### After Completing Work
+3. **Run tests** — Execute `npm test` and ensure all tests pass. Do not proceed if tests fail.
+4. **Stage and commit** — Use conventional commit messages:
+   - `feat(scope): description` for new features
+   - `fix(scope): description` for bug fixes
+   - `test(scope): description` for test additions
+   - `chore(scope): description` for maintenance
+5. **Update `AGENT_CONTEXT.md`** — Add what changed, what was completed, and any known issues under the appropriate sections. Update the "Last Updated" line.
+6. **Update `docs/project-context.md`** — If architectural patterns, new modules, or conventions changed, reflect them here.
+7. **Push the branch** — Run `git push -u origin <branch-name>`.
+8. **Open a Pull Request** — Use `gh pr create --base develop --title "<conventional-commit-style-title>" --body "<summary-of-changes>"` to open a PR to `develop`. If `gh` CLI is unavailable, instruct the user to create the PR manually and provide the branch name.
+
+### Halt Conditions
+- If `AGENT_CONTEXT.md` cannot be read at the start, **HALT** and ask the user.
+- If tests fail after implementation and cannot be fixed, **HALT** with details.
+- If `gh` CLI is not available for PR creation, complete all other steps and clearly tell the user to open the PR manually.
+
 ## Architecture at a Glance
 
 ```

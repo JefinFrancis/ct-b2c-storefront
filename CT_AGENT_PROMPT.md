@@ -5,12 +5,20 @@
 ## 🧭 PRIME DIRECTIVE FOR ALL AGENTS
 
 > **Before you write a single line of code, you MUST:**
-> 1. Read `AGENT_CONTEXT.md` in the project root.
+> 1. Read `AGENT_CONTEXT.md` in the project root. If it cannot be read, **HALT** and ask the user.
 > 2. Understand the current state of the project (what's done, what's pending, known issues).
-> 3. After completing your work:
+> 3. **Create a new Git branch** from `develop` — never commit directly to `develop` or `main`.
+>    - Features: `feature/CT-<id>-<short-description>`
+>    - Chores: `chore/<short-description>`
+>    - Fixes: `fix/<short-description>`
+> 4. After completing your work:
 >    - **Write unit tests** for all new services, controllers, and components.
->    - **Run `npm run test`** to verify all tests pass.
+>    - **Run `npm test`** to verify all tests pass. Do not proceed if tests fail.
+>    - **Stage and commit** using conventional commit messages (e.g., `feat(api/cart): add endpoint`).
 >    - **Update `AGENT_CONTEXT.md`** to reflect what changed and what the next agent should know.
+>    - **Update `docs/project-context.md`** if architectural patterns or conventions changed.
+>    - **Push the branch** — `git push -u origin <branch-name>`.
+>    - **Open a Pull Request** to `develop` using `gh pr create --base develop --title "<title>" --body "<summary>"`. If `gh` CLI is unavailable, tell the user to create the PR manually.
 >
 > This file is the shared brain of the project. Neglecting it breaks continuity for every agent that follows you.
 
