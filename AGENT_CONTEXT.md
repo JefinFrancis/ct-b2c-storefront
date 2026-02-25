@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-20 — Agent Session 18 / Bugfix: Missing Profile Page + Follow-up Updates
+2026-02-25 — Agent Session 19 / BMAD Method Integration + Project Documentation
 
 ## Project State
 GitHub repository is now **public**, GitFlow branches (main, develop) pushed. CI/CD
@@ -19,7 +19,8 @@ Bugfix releases applied: (1) CORS, search, category filter, variant selector, au
 Branch: `feature/ct-full-integration` merged to `develop`.
 **Unit testing completed for all features** — 151 tests total (64 API + 87 Web).
 **Storefront UX upgrade complete** — Category pages (/category/[...slug]), new homepage (hero, categories, trending products, testimonials, newsletter), full UI/UX refresh (brand colors, dark mode, new Header, Footer, ThemeToggle), updated ProductCard and PLP styling.
-**Feature branch**: `feature/add-profile-page` created and pushed for profile page feature.
+**BMAD Method v6.0.1 installed** — Workflow orchestration, agent system, and project knowledge framework now integrated.
+**Feature branch**: `chore/bmad-integration-project-docs` for BMAD integration and documentation.
 
 ## Completed Work
 
@@ -216,6 +217,13 @@ Branch: `feature/ct-full-integration` merged to `develop`.
 - [x] **Feature branch**: `feature/add-profile-page` created and pushed
 - [x] **Build passes**: No regressions in existing tests or build
 
+### ✅ BMAD Method Integration + Project Documentation (Session 19)
+- [x] **BMAD v6.0.1 installed**: `npx bmad-method@6.0.1 install` — agents, workflows, core tasks, module configs
+- [x] **`docs/project-context.md` created**: LLM-optimized project context document for all BMAD agents (architecture, patterns, conventions, env vars, commands)
+- [x] **`.github/copilot-instructions.md` updated**: Added comprehensive project-specific section below BMAD section — critical rules, architecture summary, key patterns, development commands, current status
+- [x] **`AGENT_CONTEXT.md` updated**: Session 19 recorded with BMAD integration details
+- [x] **Feature branch**: `chore/bmad-integration-project-docs` created from develop
+
 ### 🧪 Unit Testing Status
 
 | Feature | API Tests | Web Tests | Status |
@@ -269,10 +277,10 @@ Branch: `feature/ct-full-integration` merged to `develop`.
 - [ ] Cloud CDN configured
 
 ## In Progress
-Nothing in progress. All features, bugfixes, CT integration, and UX upgrade complete.
+BMAD Method v6.0.1 integrated. All features, bugfixes, CT integration, and UX upgrade complete.
 
-All planned B2C features (1-7) plus comprehensive CT integration are now complete. Next priorities:
-1. CI/CD pipeline implementation
+All planned B2C features (1-7) plus comprehensive CT integration are now complete. BMAD is now available for structured workflow execution. Next priorities:
+1. CI/CD pipeline implementation (use BMAD workflows or Quick Dev)
 2. GCP deployment when production-ready
 
 ### GitHub Environments — Created ✅
