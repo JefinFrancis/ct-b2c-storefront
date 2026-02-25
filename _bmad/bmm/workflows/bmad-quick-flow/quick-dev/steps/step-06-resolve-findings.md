@@ -1,6 +1,8 @@
 ---
 name: 'step-06-resolve-findings'
 description: 'Handle review findings interactively, apply fixes, update tech-spec with final status'
+
+nextStepFile: './step-07-git-commit-pr.md'
 ---
 
 # Step 6: Resolve Findings
@@ -116,15 +118,11 @@ If `{execution_mode}` is "tech-spec":
 
 ---
 
-## WORKFLOW COMPLETE
+## WORKFLOW CONTINUATION
 
-This is the final step. The Quick Dev workflow is now complete.
+The Quick Dev implementation phase is complete. Proceed to Step 7 for GitFlow finalization (commit and PR creation).
 
-User can:
-
-- Commit changes
-- Run additional tests
-- Start new Quick Dev session
+Load and follow: `step-07-git-commit-pr.md`
 
 ---
 

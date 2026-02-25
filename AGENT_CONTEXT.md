@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-25 — Agent Session 20 / Comprehensive Documentation Suite (8 docs, 15K+ words)
+2026-02-25 — Agent Session 21 / GitFlow Enforcement Injected into BMAD Workflows
 
 ## Project State
 ✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests, BMAD framework integrated, comprehensive documentation suite created. GitHub repository public with GitFlow branches (main, develop) protected. commercetools project (c-spire-oe-demo, US region) fully configured with Admin API client. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) and Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments (mock PSP), wishlist, discount codes, cart merge (anonymousCartSignInMode), billing addresses. Dark mode + responsive design throughout. Unit testing 151 tests (64 API/Jest + 87 Web/Vitest). Ready for CI/CD pipeline and GCP Cloud Run deployment.
@@ -18,6 +18,56 @@
 - DOCUMENTATION_INDEX.md — Master navigation guide
 
 **Feature branch**: `chore/bmad-integration-project-docs` (from Session 19) carries forward (will be merged after session 20 work is committed).
+
+## Session 21: GitFlow Enforcement Injected into BMAD Workflows
+
+**Objective:** Ensure ALL BMAD agents automatically follow GitFlow (branch → code → commit → PR) without skipping steps.
+
+**Changes Made:**
+
+1. **Strengthened `.github/copilot-instructions.md`:**
+   - Added "Mandatory Git & Documentation Workflow" section (required for ALL agent sessions)
+   - Pre-work: Read AGENT_CONTEXT.md, create feature branch from develop
+   - Post-work: Run tests, stage & commit (conventional messages), update docs, push, open PR
+   - Halt conditions if AGENT_CONTEXT.md unreadable or tests fail
+
+2. **Enhanced `CT_AGENT_PROMPT.md` Prime Directive:**
+   - Expanded from 3 to 11 steps covering full GitFlow cycle
+   - Branching, committing, doc updates, PR creation are now explicitly mandatory
+   - References both copilot-instructions and CT_AGENT_PROMPT as dual enforcement
+
+3. **Injected pre/post hooks into `dev-story` workflow** (`_bmad/bmm/workflows/4-implementation/dev-story/instructions.xml`):
+   - **Step 0 (new):** GitFlow initialization — verify Git repo, ensure on develop, create feature branch, capture baseline commit
+   - **Step 11 (new):** GitFlow finalization — stage changes, create conventional commit, push branch, create/open PR (with `gh` CLI fallback to manual)
+   - Step 0 runs before story discovery; Step 11 runs after completion confirmation
+   - Both steps are **critical** and cannot be skipped
+
+4. **Injected pre/post hooks into `quick-dev` workflow:**
+   - **Created `steps/step-00-git-init.md` (new):** GitFlow initialization (same as dev-story Step 0)
+   - **Updated `steps/step-06-resolve-findings.md`:** Changed nextStepFile to point to step-07 (new)
+   - **Created `steps/step-07-git-commit-pr.md` (new):** GitFlow finalization — stage, commit, push, PR creation
+   - **Updated `quick-dev/workflow.md`:** Changed initial step from step-01 to step-00
+   - All steps are sequential; Step 07 cannot be skipped
+
+5. **Documentation:**
+   - Step files include comprehensive instructions for branching, committing, and PR creation
+   - Conventional commit format explained (feat/fix/chore + scope)
+   - `gh` CLI detection with manual GitHub UI fallback instructions
+   - Clear messaging on branch naming, commit messages, and PR process
+
+**Result:** Any agent using `dev-story` or `quick-dev` workflows MUST:
+- ✅ Create a feature branch before starting work
+- ✅ Run tests and commit with conventional messages (enforced by step logic)
+- ✅ Push branch and open PR to develop (enforced by mandatory final step)
+
+**Workflows Covered:** 
+- `dev-story` (full story implementation) — Step 0 + Step 11
+- `quick-dev` (quick feature development) — Step 00 + Step 07
+
+**Workflows Not Modified (preparatory/review only):**
+- `quick-spec` — Creates tech specs (no code, no git needed)
+- `create-story` — Creates story files (no code, no git needed)
+- `code-review` — Reviews code (no new code, no git needed)
 
 ## Completed Work
 
