@@ -122,7 +122,7 @@ gcloud run deploy "$API_SERVICE" \
     --timeout=300 \
     --min-instances="$API_MIN_INSTANCES" \
     --max-instances="$API_MAX_INSTANCES" \
-    --ingress=internal-and-cloud-load-balancing \
+    --ingress=all \
     --set-env-vars=NODE_ENV=production \
     --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
     --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \

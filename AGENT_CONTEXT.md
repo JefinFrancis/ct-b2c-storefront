@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 25 / SSR API URL Fixes
+2026-02-27 — Agent Session 26 / GCP Staging Ingress + Upstash Notes
 
 ## Project State
 ✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests. **GitHub Actions CI/CD fully automated**: environment-specific web builds (staging/production), PR validation workflow, automated testing/linting/typecheck, Docker build verification, deployment with manual production approval. Resolved critical deployment bug where web images used wrong API URLs. GCP deployment configuration complete: updated Dockerfiles, deployment scripts, Secret Manager integration, comprehensive documentation. GitHub repository public with GitFlow branches protected. commercetools project (c-spire-oe-demo, US region) fully configured. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) + Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments, wishlist, discount codes, cart merge. Dark mode + responsive. **Push to main triggers automated staging + production deployments.**
@@ -16,10 +16,10 @@
 - DEPLOYMENT_GUIDE.md — Local dev + GCP deployment
 - QUICK_REFERENCE.md — Common tasks, workflows, FAQ
 - DOCUMENTATION_INDEX.md — Master navigation guide
-+
-+**CI/CD Documentation (Session 23):**
-+- GITHUB_ACTIONS_GUIDE.md — Comprehensive CI/CD guide with workflow details, troubleshooting, best practices
-+- README.md updated with workflow badges and quick links
+
+**CI/CD Documentation (Session 23):**
+- GITHUB_ACTIONS_GUIDE.md — Comprehensive CI/CD guide with workflow details, troubleshooting, best practices
+- README.md updated with workflow badges and quick links
 
 **Feature branch**: `feature/CT-9-github-actions-deployment` (created from develop, all work committed)
 
@@ -59,18 +59,19 @@
 - **Fix:** Manually updated API service with `gcloud run deploy api-staging --update-env-vars=ALLOWED_ORIGIN="https://web-staging-34a3uja3ga-uc.a.run.app"`
 - **Traffic Fix:** Updated traffic routing with `gcloud run services update-traffic api-staging --to-revisions=LATEST=100`
 
-### Ingress Clarification
-- **API (`api-staging`)**: `--ingress=internal-and-cloud-load-balancing`
-  - ❌ NOT publicly accessible via curl from the internet
-  - ✅ CAN be called by other Cloud Run services in same region (like `web-staging`)
-  - Design rationale: E-commerce backend should only be accessible from frontend
-- **Web (`web-staging`)**: `--ingress=all`
-  - ✅ Publicly accessible (frontend users)
+### Ingress Update (Session 26)
+- **API (`api-staging`)**: updated to `--ingress=all` based on staging connectivity issues.
+   - ✅ Publicly accessible via curl from the internet
+   - ✅ Still callable from Cloud Run services
+- **Web (`web-staging`)**: remains `--ingress=all`
+   - ✅ Publicly accessible (frontend users)
 
 **Current Deployment URLs (Staging):**
-- **API:** `https://api-staging-34a3uja3ga-uc.a.run.app` (internal-only)
+- **API:** `https://api-staging-34a3uja3ga-uc.a.run.app` (public)
 - **Web:** `https://web-staging-34a3uja3ga-uc.a.run.app` (public)
-- **API ALLOWED_ORIGIN:** Now correctly set to web URL ✅
+- **API ALLOWED_ORIGIN:** Set to web URL ✅
+
+**Staging Redis:** Upstash Redis configured and in use for staging (`REDIS_URL_STAGING`).
 
 **Status:** Deployment script fixed; CORS origin manually corrected on existing services
    - Prevents client bundles from baking placeholder API URLs.

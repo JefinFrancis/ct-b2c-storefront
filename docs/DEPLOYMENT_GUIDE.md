@@ -279,8 +279,10 @@ echo -n "https://auth.us-central1.gcp.commercetools.com" | gcloud secrets create
 echo -n "https://api.us-central1.gcp.commercetools.com" | gcloud secrets create CT_API_URL --data-file=-
 echo -n "manage_products manage_orders manage_customers manage_carts manage_payments view_published_products" | gcloud secrets create CT_SCOPES --data-file=-
 
-# Store Redis URL (Upstash connection string)
-echo -n "redis://default:password@host:port" | gcloud secrets create UPSTASH_REDIS_URL --data-file=-
+# Store Redis URLs (Upstash connection strings)
+# Staging uses Upstash; create separate secrets for staging and production.
+echo -n "redis://default:password@host:port" | gcloud secrets create REDIS_URL_STAGING --data-file=-
+echo -n "redis://default:password@host:port" | gcloud secrets create REDIS_URL_PROD --data-file=-
 
 # List secrets
 gcloud secrets list
@@ -295,7 +297,7 @@ gcloud builds submit \
   --source=. \
   --remote
 
-# Deploy to Cloud Run (internal only)
+# Deploy to Cloud Run (public, ingress all)
 gcloud run deploy api \
   --image=$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACT_REGISTRY_REPO/api:latest \
   --platform=managed \
@@ -303,7 +305,7 @@ gcloud run deploy api \
   --memory=1Gi \
   --cpu=1 \
   --timeout=300 \
-  --ingress=internal \
+  --ingress=all \
   --set-env-vars=PORT=8080 \
   --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
   --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
@@ -311,7 +313,7 @@ gcloud run deploy api \
   --set-secrets=CTP_AUTH_URL=CT_AUTH_URL:latest \
   --set-secrets=CTP_API_URL=CT_API_URL:latest \
   --set-secrets=CTP_SCOPES=CT_SCOPES:latest \
-  --set-secrets=REDIS_URL=UPSTASH_REDIS_URL:latest \
+  --set-secrets=REDIS_URL=REDIS_URL_STAGING:latest \
   --allow-unauthenticated=false
 ```
 
