@@ -209,108 +209,110 @@ jobs:
           echo "- **API:** ${{ steps.api-url.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Web:** ${{ steps.web-url.outputs.web-url }}" >> $GITHUB_STEP_SUMMARY
 
-  deploy-production:
-    name: Deploy to Production
-    needs: [build-api, deploy-staging]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: production
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
-
-      - name: Deploy API to Cloud Run (Production)
-        run: |
-          gcloud run deploy api \
-            --image=${{ needs.build-api.outputs.api-image }} \
-            --platform=managed \
-            --region=${{ env.GCP_REGION }} \
-            --memory=2Gi \
-            --cpu=2 \
-            --timeout=300 \
-            --min-instances=1 \
-            --max-instances=20 \
-            --ingress=internal-and-cloud-load-balancing \
-            --set-env-vars=NODE_ENV=production \
-            --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
-            --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
-            --set-secrets=CTP_CLIENT_SECRET=CT_CLIENT_SECRET:latest \
-            --set-secrets=CTP_AUTH_URL=CT_AUTH_URL:latest \
-            --set-secrets=CTP_API_URL=CT_API_URL:latest \
-            --set-secrets=CTP_SCOPES=CT_SCOPES:latest \
-            --set-secrets=REDIS_URL=REDIS_URL_PROD:latest \
-            --allow-unauthenticated
-
-      - name: Get API production URL
-        id: api-url
-        run: |
-          API_URL=$(gcloud run services describe api --region=${{ env.GCP_REGION }} --format='value(status.url)')
-          echo "api-url=${API_URL}" >> $GITHUB_OUTPUT
-          echo "API Production URL: ${API_URL}"
-
-      - name: Build production web image
-        id: build-web
-        run: |
-          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}"
-          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
-
-          docker build \
-            -f apps/web/Dockerfile \
-            -t "${WEB_IMAGE}" \
-            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest \
-            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
-            --build-arg NEXT_PUBLIC_APP_URL=https://ct-b2c-storefront.example.com \
-            .
-
-          docker push "${WEB_IMAGE}"
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest
-          echo "Pushed: ${WEB_IMAGE}"
-
-      - name: Deploy Web to Cloud Run (Production)
-        run: |
-          gcloud run deploy web \
-            --image=${{ steps.build-web.outputs.web-image }} \
-            --platform=managed \
-            --region=${{ env.GCP_REGION }} \
-            --memory=1Gi \
-            --cpu=1 \
-            --timeout=300 \
-            --min-instances=1 \
-            --max-instances=20 \
-            --ingress=all \
-            --set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }},INTERNAL_API_URL=${{ steps.api-url.outputs.api-url }} \
-            --allow-unauthenticated
-
-      - name: Get Web production URL
-        id: web-url
-        run: |
-          WEB_URL=$(gcloud run services describe web --region=${{ env.GCP_REGION }} --format='value(status.url)')
-          echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
-          echo "Web Production URL: ${WEB_URL}"
-
-      - name: Update API CORS allowed origin (Production)
-        run: |
-          gcloud run services update api \
-            --region=${{ env.GCP_REGION }} \
-            --update-env-vars=ALLOWED_ORIGIN=${{ steps.web-url.outputs.web-url }},http://localhost:3000,http://localhost:3001
-
-      - name: Production deployment summary
-        run: |
-          echo "### ✅ Production Deployment Successful" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎉 **Version:** \`$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **API:** ${{ steps.api-url.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Web:** ${{ steps.web-url.outputs.web-url }}" >> $GITHUB_STEP_SUMMARY
+  # TODO: Re-enable production deployment when ready for production release.
+  # Production deployment is intentionally disabled — only staging deployments are active.
+  # See AGENT_CONTEXT.md for context on why this was deferred.
+  #
+  # deploy-production:
+  #   name: Deploy to Production
+  #   needs: [build-api, deploy-staging]
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   environment:
+  #     name: production
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Authenticate to Google Cloud
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         credentials_json: ${{ secrets.GCP_SA_KEY }}
+  #
+  #     - name: Set up Cloud SDK
+  #       uses: google-github-actions/setup-gcloud@v2
+  #
+  #     - name: Configure Docker for Artifact Registry
+  #       run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+  #
+  #     - name: Deploy API to Cloud Run (Production)
+  #       run: |
+  #         gcloud run deploy api \
+  #           --image=${{ needs.build-api.outputs.api-image }} \
+  #           --platform=managed \
+  #           --region=${{ env.GCP_REGION }} \
+  #           --memory=2Gi \
+  #           --cpu=2 \
+  #           --timeout=300 \
+  #           --min-instances=1 \
+  #           --max-instances=20 \
+  #           --ingress=internal-and-cloud-load-balancing \
+  #           --set-env-vars=NODE_ENV=production \
+  #           --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
+  #           --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
+  #           --set-secrets=CTP_CLIENT_SECRET=CT_CLIENT_SECRET:latest \
+  #           --set-secrets=CTP_AUTH_URL=CT_AUTH_URL:latest \
+  #           --set-secrets=CTP_API_URL=CT_API_URL:latest \
+  #           --set-secrets=CTP_SCOPES=CT_SCOPES:latest \
+  #           --set-secrets=REDIS_URL=REDIS_URL_PROD:latest \
+  #           --allow-unauthenticated
+  #
+  #     - name: Get API production URL
+  #       id: api-url
+  #       run: |
+  #         API_URL=$(gcloud run services describe api --region=${{ env.GCP_REGION }} --format='value(status.url)')
+  #         echo "api-url=${API_URL}" >> $GITHUB_OUTPUT
+  #         echo "API Production URL: ${API_URL}"
+  #
+  #     - name: Build production web image
+  #       id: build-web
+  #       run: |
+  #         SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+  #         WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}"
+  #         echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
+  #         docker build \
+  #           -f apps/web/Dockerfile \
+  #           -t "${WEB_IMAGE}" \
+  #           -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest \
+  #           --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
+  #           --build-arg NEXT_PUBLIC_APP_URL=https://ct-b2c-storefront.example.com \
+  #           .
+  #         docker push "${WEB_IMAGE}"
+  #         docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest
+  #         echo "Pushed: ${WEB_IMAGE}"
+  #
+  #     - name: Deploy Web to Cloud Run (Production)
+  #       run: |
+  #         gcloud run deploy web \
+  #           --image=${{ steps.build-web.outputs.web-image }} \
+  #           --platform=managed \
+  #           --region=${{ env.GCP_REGION }} \
+  #           --memory=1Gi \
+  #           --cpu=1 \
+  #           --timeout=300 \
+  #           --min-instances=1 \
+  #           --max-instances=20 \
+  #           --ingress=all \
+  #           --set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }},INTERNAL_API_URL=${{ steps.api-url.outputs.api-url }} \
+  #           --allow-unauthenticated
+  #
+  #     - name: Get Web production URL
+  #       id: web-url
+  #       run: |
+  #         WEB_URL=$(gcloud run services describe web --region=${{ env.GCP_REGION }} --format='value(status.url)')
+  #         echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
+  #         echo "Web Production URL: ${WEB_URL}"
+  #
+  #     - name: Update API CORS allowed origin (Production)
+  #       run: |
+  #         gcloud run services update api \
+  #           --region=${{ env.GCP_REGION }} \
+  #           --update-env-vars=ALLOWED_ORIGIN=${{ steps.web-url.outputs.web-url }},http://localhost:3000,http://localhost:3001
+  #
+  #     - name: Production deployment summary
+  #       run: |
+  #         echo "### ✅ Production Deployment Successful" >> $GITHUB_STEP_SUMMARY
+  #         echo "" >> $GITHUB_STEP_SUMMARY
+  #         echo "🎉 **Version:** \`$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
+  #         echo "- **API:** ${{ steps.api-url.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
+  #         echo "- **Web:** ${{ steps.web-url.outputs.web-url }}" >> $GITHUB_STEP_SUMMARY
