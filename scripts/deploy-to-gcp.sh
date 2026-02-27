@@ -112,6 +112,7 @@ echo -e "${GREEN}✓${NC} API image pushed"
 echo ""
 echo -e "${BLUE}Step 3/5: Deploying API service to Cloud Run...${NC}"
 
+# First pass: Deploy API without ALLOWED_ORIGIN to get the service
 gcloud run deploy "$API_SERVICE" \
     --image="$API_IMAGE" \
     --platform=managed \
@@ -198,7 +199,22 @@ WEB_URL=$(gcloud run services describe "$WEB_SERVICE" \
 echo -e "${GREEN}✓${NC} Web deployed: $WEB_URL"
 
 echo ""
-echo -e "${BLUE}Verifying deployment...${NC}"
+echo -e "${BLUE}Step 5/6: Updating API CORS configuration...${NC}"
+
+# Update API service with correct ALLOWED_ORIGIN (web service URL)
+gcloud run deploy "$API_SERVICE" \
+    --image="$API_IMAGE" \
+    --platform=managed \
+    --region="$GCP_REGION" \
+    --update-env-vars=ALLOWED_ORIGIN="$WEB_URL" \
+    --no-gen2 || {
+    echo -e "${RED}Failed to update API CORS configuration${NC}"
+    exit 1
+}
+echo -e "${GREEN}✓${NC} API CORS updated to allow: $WEB_URL"
+
+echo ""
+echo -e "${BLUE}Step 6/6: Verifying deployment...${NC}"
 
 # Health check API
 API_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" || echo "000")
