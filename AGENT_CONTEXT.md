@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 24 / SSR API Base Fix
+2026-02-27 — Agent Session 25 / SSR API URL Fixes
 
 ## Project State
 ✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests. **GitHub Actions CI/CD fully automated**: environment-specific web builds (staging/production), PR validation workflow, automated testing/linting/typecheck, Docker build verification, deployment with manual production approval. Resolved critical deployment bug where web images used wrong API URLs. GCP deployment configuration complete: updated Dockerfiles, deployment scripts, Secret Manager integration, comprehensive documentation. GitHub repository public with GitFlow branches protected. commercetools project (c-spire-oe-demo, US region) fully configured. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) + Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments, wishlist, discount codes, cart merge. Dark mode + responsive. **Push to main triggers automated staging + production deployments.**
@@ -36,6 +36,22 @@
 
 2. **PLP error message cleanup:**
    - `apps/web/src/app/(store)/products/page.tsx` now shows env-based API URL guidance instead of hardcoded localhost.
+
+**Status:** Code changes complete; `npm test` passed (warnings in web tests only).
+
+## Session 25: SSR API URL Fixes (GCP)
+
+**Objective:** Ensure SSR and client bundles use the real API URL in Cloud Run deployments.
+
+**Branch:** `fix/ssr-api-url` (created from develop)
+
+**Changes Made:**
+1. **Deploy script ordering fix:**
+   - `scripts/deploy-to-gcp.sh` now builds the web image after API deploy and uses the real `API_URL` for `NEXT_PUBLIC_API_URL`.
+   - Prevents client bundles from baking placeholder API URLs.
+
+2. **PLP SSR error hint:**
+   - `apps/web/src/app/(store)/products/page.tsx` prefers `INTERNAL_API_URL` for the API hint.
 
 **Status:** Code changes complete; `npm test` passed (warnings in web tests only).
 

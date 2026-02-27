@@ -31,7 +31,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const params = await searchParams;
   const limit = params.limit ? parseInt(params.limit, 10) : 20;
   const offset = params.offset ? parseInt(params.offset, 10) : 0;
-  const apiUrlHint = process.env.NEXT_PUBLIC_API_URL ?? "your API server URL";
+  const apiUrlHint =
+    process.env.INTERNAL_API_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "your API server URL";
 
   let products: Product[] = [];
   let total = 0;
