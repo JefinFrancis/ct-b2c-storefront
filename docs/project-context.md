@@ -191,7 +191,9 @@ npx turbo lint              # Lint all packages
 
 ## What's Next
 
-1. CI/CD pipeline (GitHub Actions)
-2. GCP deployment (Cloud Run, Artifact Registry, Secret Manager)
+1. CI/CD pipeline (GitHub Actions) — staging deployments active, production deferred (see TODO below)
+2. GCP deployment (Cloud Run, Artifact Registry, Secret Manager) — staging only for now
 3. Cloud CDN setup
 4. Release v1.0.0
+
+> **TODO (Production Deployment):** Production deployment is intentionally disabled in `.github/workflows/ci-cd.yml`. Only staging deployments run automatically on push to `main`. Re-enable the `deploy-production` job when production infrastructure is ready and validated.
