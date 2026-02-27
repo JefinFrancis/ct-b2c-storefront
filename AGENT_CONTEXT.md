@@ -45,28 +45,34 @@
 
 **Branch:** `fix/ssr-api-url` (created from develop)
 
-**Issues Identified:**
-1. Primary: API was using placeholder URL (`https://api-staging-placeholder.run.app`) due to build-time args not being updated with actual Cloud Run URL
-2. Secondary: CORS origin not configured in API service, defaulting to localhost-only origins, rejecting requests from Cloud Run web service
+**Issues Identified & Fixed:**
 
-**Root Causes:**
-- Pre-built web image used placeholder API URL as a fallback
-- Deployment script wasn't setting `ALLOWED_ORIGIN` environment variable for API service, so `apps/api/src/main.ts` defaulted to `http://localhost:3000,http://localhost:3001`
-- API service received requests from real Cloud Run web URL (e.g., `https://web-staging-34a3uja3ga-uc.a.run.app`) but rejected them due to CORS whitelist mismatch
+### Issue 1: Invalid --no-gen2 Flag (FIXED ✅)
+- Deployment script used invalid `--no-gen2` flag in `gcloud run deploy`
+- Caused CORS configuration step to fail
+- **Fix:** Removed invalid flag from line 211 in `scripts/deploy-to-gcp.sh`
 
-**Changes Made:**
-1. **Deploy script ordering fix:**
-   - `scripts/deploy-to-gcp.sh` now builds the web image after API deploy and uses the real `API_URL` for `NEXT_PUBLIC_API_URL` and `INTERNAL_API_URL` build args
-   
-2. **Added CORS configuration step (NEW - Session 25 continued):**
-   - After web service deployment, deployment script now redeploys API service with `--update-env-vars=ALLOWED_ORIGIN="$WEB_URL"`
-   - Two-step deploy ensures API has correct web service origin whitelisted
-   - Step renamed from "5/5" to "6/6" (new Step 5 does CORS update)
-   
-**Technical Details:**
-- API CORS config in `main.ts`: `origin: (origin, callback) => { if (!origin || allowedOrigins.includes(origin)) callback(null, true) else callback(error) }`
-- Without `ALLOWED_ORIGIN` env var, defaults to localhost-only 
-- Deployment script now: Deploy API (step 3) → Deploy Web (step 4) → Update API CORS (step 5) → Verify both (step 6)
+### Issue 2: CORS Origin Mismatch (FIXED ✅)
+- API service had old web service URL as ALLOWED_ORIGIN: `https://web-staging-755002618864.us-central1.run.app`
+- Actual current web service URL: `https://web-staging-34a3uja3ga-uc.a.run.app`
+- Browser CORS checks: Origin `https://web-staging-34a3uja3ga-uc.a.run.app` ≠ `https://web-staging-755002618864.us-central1.run.app` → **CORS Rejected**
+- **Fix:** Manually updated API service with `gcloud run deploy api-staging --update-env-vars=ALLOWED_ORIGIN="https://web-staging-34a3uja3ga-uc.a.run.app"`
+- **Traffic Fix:** Updated traffic routing with `gcloud run services update-traffic api-staging --to-revisions=LATEST=100`
+
+### Ingress Clarification
+- **API (`api-staging`)**: `--ingress=internal-and-cloud-load-balancing`
+  - ❌ NOT publicly accessible via curl from the internet
+  - ✅ CAN be called by other Cloud Run services in same region (like `web-staging`)
+  - Design rationale: E-commerce backend should only be accessible from frontend
+- **Web (`web-staging`)**: `--ingress=all`
+  - ✅ Publicly accessible (frontend users)
+
+**Current Deployment URLs (Staging):**
+- **API:** `https://api-staging-34a3uja3ga-uc.a.run.app` (internal-only)
+- **Web:** `https://web-staging-34a3uja3ga-uc.a.run.app` (public)
+- **API ALLOWED_ORIGIN:** Now correctly set to web URL ✅
+
+**Status:** Deployment script fixed; CORS origin manually corrected on existing services
    - Prevents client bundles from baking placeholder API URLs.
 
 2. **PLP SSR error hint:**
