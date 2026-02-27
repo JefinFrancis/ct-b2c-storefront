@@ -1,7 +1,7 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 23 / GitHub Actions CI/CD Complete
+2026-02-27 — Agent Session 24 / SSR API Base Fix
 
 ## Project State
 ✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests. **GitHub Actions CI/CD fully automated**: environment-specific web builds (staging/production), PR validation workflow, automated testing/linting/typecheck, Docker build verification, deployment with manual production approval. Resolved critical deployment bug where web images used wrong API URLs. GCP deployment configuration complete: updated Dockerfiles, deployment scripts, Secret Manager integration, comprehensive documentation. GitHub repository public with GitFlow branches protected. commercetools project (c-spire-oe-demo, US region) fully configured. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) + Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments, wishlist, discount codes, cart merge. Dark mode + responsive. **Push to main triggers automated staging + production deployments.**
@@ -22,6 +22,22 @@
 +- README.md updated with workflow badges and quick links
 
 **Feature branch**: `feature/CT-9-github-actions-deployment` (created from develop, all work committed)
+
+## Session 24: SSR API Base Fix (GCP)
+
+**Objective:** Resolve SSR calls pointing at localhost in Cloud Run and remove hardcoded localhost hints.
+
+**Branch:** `fix/gcp-ssr-api-base` (created from develop)
+
+**Changes Made:**
+1. **Server-side API base fallback:**
+   - `apps/web/src/lib/api-client.ts` now falls back to `NEXT_PUBLIC_API_URL` when `INTERNAL_API_URL` is unset.
+   - Prevents SSR calls from defaulting to `http://localhost:8080` in Cloud Run.
+
+2. **PLP error message cleanup:**
+   - `apps/web/src/app/(store)/products/page.tsx` now shows env-based API URL guidance instead of hardcoded localhost.
+
+**Status:** Code changes complete; tests not yet run.
 
 ## Session 21: GitFlow Enforcement Injected into BMAD Workflows
 

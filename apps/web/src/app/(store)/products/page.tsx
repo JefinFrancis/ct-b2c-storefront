@@ -31,6 +31,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const params = await searchParams;
   const limit = params.limit ? parseInt(params.limit, 10) : 20;
   const offset = params.offset ? parseInt(params.offset, 10) : 0;
+  const apiUrlHint = process.env.NEXT_PUBLIC_API_URL ?? "your API server URL";
 
   let products: Product[] = [];
   let total = 0;
@@ -120,8 +121,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <p className="text-red-600 dark:text-red-400 font-medium">Error loading products</p>
             <p className="text-red-500 dark:text-red-500 text-sm mt-1">{error}</p>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-4">
-              Make sure the API server is running at{" "}
-              <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">localhost:8080</code>
+              Check API URL configuration (NEXT_PUBLIC_API_URL / INTERNAL_API_URL). Current: {" "}
+              <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{apiUrlHint}</code>
             </p>
           </div>
         ) : products.length === 0 ? (
