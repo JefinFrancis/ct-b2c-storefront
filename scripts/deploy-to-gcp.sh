@@ -206,8 +206,7 @@ gcloud run deploy "$API_SERVICE" \
     --image="$API_IMAGE" \
     --platform=managed \
     --region="$GCP_REGION" \
-    --update-env-vars=ALLOWED_ORIGIN="$WEB_URL" \
-    --no-gen2 || {
+    --update-env-vars=ALLOWED_ORIGIN="$WEB_URL" || {
     echo -e "${RED}Failed to update API CORS configuration${NC}"
     exit 1
 }
