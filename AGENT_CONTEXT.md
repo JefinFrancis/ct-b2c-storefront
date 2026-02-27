@@ -37,7 +37,7 @@
 2. **PLP error message cleanup:**
    - `apps/web/src/app/(store)/products/page.tsx` now shows env-based API URL guidance instead of hardcoded localhost.
 
-**Status:** Code changes complete; tests not yet run.
+**Status:** Code changes complete; `npm test` passed (warnings in web tests only).
 
 ## Session 21: GitFlow Enforcement Injected into BMAD Workflows
 
