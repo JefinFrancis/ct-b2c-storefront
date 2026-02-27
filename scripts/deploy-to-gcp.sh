@@ -153,7 +153,7 @@ gcloud run deploy "$API_SERVICE" \
     --min-instances="$API_MIN_INSTANCES" \
     --max-instances="$API_MAX_INSTANCES" \
     --ingress=internal-and-cloud-load-balancing \
-    --set-env-vars=PORT=8080,NODE_ENV=production \
+    --set-env-vars=NODE_ENV=production \
     --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
     --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
     --set-secrets=CTP_CLIENT_SECRET=CT_CLIENT_SECRET:latest \
@@ -185,7 +185,7 @@ gcloud run deploy "$WEB_SERVICE" \
     --min-instances="$WEB_MIN_INSTANCES" \
     --max-instances="$WEB_MAX_INSTANCES" \
     --ingress=all \
-    --set-env-vars=PORT=3000,NODE_ENV=production,NEXT_PUBLIC_API_URL="$API_URL",INTERNAL_API_URL="$API_URL" \
+    --set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL="$API_URL",INTERNAL_API_URL="$API_URL" \
     --allow-unauthenticated || {
     echo -e "${RED}Failed to deploy Web service${NC}"
     exit 1

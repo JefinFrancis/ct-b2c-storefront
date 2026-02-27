@@ -132,7 +132,7 @@ jobs:
             --min-instances=0 \
             --max-instances=10 \
             --ingress=internal-and-cloud-load-balancing \
-            --set-env-vars=PORT=8080,NODE_ENV=production \
+            --set-env-vars=NODE_ENV=production \
             --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
             --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
             --set-secrets=CTP_CLIENT_SECRET=CT_CLIENT_SECRET:latest \
@@ -161,7 +161,7 @@ jobs:
             --min-instances=0 \
             --max-instances=10 \
             --ingress=all \
-            --set-env-vars=PORT=3000,NODE_ENV=production,NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }},INTERNAL_API_URL=${{ steps.api-url.outputs.api-url }} \
+            --set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }},INTERNAL_API_URL=${{ steps.api-url.outputs.api-url }} \
             --allow-unauthenticated
 
       - name: Get Web staging URL
@@ -201,7 +201,7 @@ jobs:
             --min-instances=1 \
             --max-instances=20 \
             --ingress=internal-and-cloud-load-balancing \
-            --set-env-vars=PORT=8080,NODE_ENV=production \
+            --set-env-vars=NODE_ENV=production \
             --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
             --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
             --set-secrets=CTP_CLIENT_SECRET=CT_CLIENT_SECRET:latest \
@@ -230,7 +230,7 @@ jobs:
             --min-instances=1 \
             --max-instances=20 \
             --ingress=all \
-            --set-env-vars=PORT=3000,NODE_ENV=production,NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }},INTERNAL_API_URL=${{ steps.api-url.outputs.api-url }} \
+            --set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }},INTERNAL_API_URL=${{ steps.api-url.outputs.api-url }} \
             --allow-unauthenticated
 
       - name: Get Web production URL
