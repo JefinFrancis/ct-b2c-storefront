@@ -221,12 +221,14 @@
 +
 +3. **Deploy to GCP** (manual or via GitHub Actions):
 +   - Option A: Manual deployment via `./scripts/deploy-to-gcp.sh staging`
-+   - Option B: Merge to main → GitHub Actions deploys automatically
++   - Option B: Merge to main → GitHub Actions deploys staging automatically
 +
 +4. **Release v1.0.0**:
-+   - Tag release after first successful production deployment
++   - Tag release after first successful staging deployment and validation
 +   - Update CHANGELOG.md with all features
 +   - Announce stable v1.0.0
++
++> **TODO (Production Deployment):** Production deployment has been intentionally disabled in the CI/CD pipeline for now. Only staging deployments are active. Re-enable the `deploy-production` job in `.github/workflows/ci-cd.yml` when ready to introduce production releases. Before doing so, ensure: production GCP secrets are configured, manual approval reviewers are set on the `production` GitHub environment, and staging has been validated end-to-end.
 +
 +5. **Future Enhancements** (Post-v1.0.0):
 +   - Cloud CDN for static assets
