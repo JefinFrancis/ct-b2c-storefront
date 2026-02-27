@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { authApi } from "@/lib/api-client";
@@ -54,7 +54,7 @@ const mockCustomer: Customer = {
   lastName: "Doe",
   addresses: [],
   isEmailVerified: true,
-  authenticationMode: "Password",
+  // authenticationMode removed - not present in current Customer type
 };
 
 // Test component to access context
@@ -190,6 +190,7 @@ describe("AuthContext", () => {
       mockAuthApi.login.mockResolvedValue({
         token: "new-token",
         customer: mockCustomer,
+        cart: null,
       });
 
       const user = userEvent.setup();
@@ -245,6 +246,7 @@ describe("AuthContext", () => {
       mockAuthApi.register.mockResolvedValue({
         token: "new-token",
         customer: newCustomer,
+        cart: null,
       });
 
       const user = userEvent.setup();

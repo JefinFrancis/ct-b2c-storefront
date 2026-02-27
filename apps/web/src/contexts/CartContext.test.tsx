@@ -41,14 +41,11 @@ const createMockCart = (
 ): Cart => ({
   id: "cart-123",
   version: 1,
-  createdAt: "2024-01-01T00:00:00.000Z",
-  lastModifiedAt: "2024-01-01T00:00:00.000Z",
   lineItems,
   cartState: "Active",
   totalPrice: {
     centAmount: 0,
     currencyCode: "USD",
-    type: "centPrecision",
     fractionDigits: 2,
   },
   totalLineItemQuantity: 0,
@@ -145,17 +142,15 @@ describe("CartContext", () => {
             value: {
               centAmount: 1000,
               currencyCode: "USD",
-              type: "centPrecision",
               fractionDigits: 2,
             },
           },
           totalPrice: {
             centAmount: 2000,
             currencyCode: "USD",
-            type: "centPrecision",
             fractionDigits: 2,
           },
-          variant: { id: 1, sku: "SKU-1", images: [], attributes: [], prices: [] },
+          variant: { id: 1, sku: "SKU-1", images: [], attributes: [] },
         },
         {
           id: "item-2",
@@ -167,17 +162,15 @@ describe("CartContext", () => {
             value: {
               centAmount: 500,
               currencyCode: "USD",
-              type: "centPrecision",
               fractionDigits: 2,
             },
           },
           totalPrice: {
             centAmount: 1500,
             currencyCode: "USD",
-            type: "centPrecision",
             fractionDigits: 2,
           },
-          variant: { id: 1, sku: "SKU-2", images: [], attributes: [], prices: [] },
+          variant: { id: 1, sku: "SKU-2", images: [], attributes: [] },
         },
       ]);
       mockCartApi.getSessionCart.mockResolvedValue(mockCart);

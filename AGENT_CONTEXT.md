@@ -1,7 +1,16 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 26 / GCP Staging Ingress + Upstash Notes
+2026-02-27 — Agent Session 27 / Fixed `apps/web` typecheck errors in tests
+
+## Session 27: Web typecheck fixes
+
+**Objective:** Resolve TypeScript type errors reported by `npx turbo typecheck --filter=web` and make `apps/web` typecheck clean.
+
+**Changes Made:**
+- Updated test mocks in `apps/web` to align with `@ct-b2c/types` definitions (added required `version` fields, converted plain `name` strings to `LocalizedString` objects, removed invalid `type`/`prices` fields from money/variant mocks, and removed unused imports).
+
+**Status:** Local `web` typecheck is clean. Files modified: `ProductCard.test.tsx`, `OrderCard.test.tsx`, `CartContext.test.tsx`, `AuthContext.test.tsx`, `CheckoutContext.test.tsx`.
 
 ## Project State
 ✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests. **GitHub Actions CI/CD fully automated**: environment-specific web builds (staging/production), PR validation workflow, automated testing/linting/typecheck, Docker build verification, deployment with manual production approval. Resolved critical deployment bug where web images used wrong API URLs. GCP deployment configuration complete: updated Dockerfiles, deployment scripts, Secret Manager integration, comprehensive documentation. GitHub repository public with GitFlow branches protected. commercetools project (c-spire-oe-demo, US region) fully configured. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) + Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments, wishlist, discount codes, cart merge. Dark mode + responsive. **Push to main triggers automated staging + production deployments.**
