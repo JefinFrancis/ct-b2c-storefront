@@ -8,7 +8,7 @@ This guide walks you through deploying your ct-b2c-storefront to Google Cloud Pl
 - [ ] gcloud CLI installed ([Install guide](https://cloud.google.com/sdk/docs/install))
 - [ ] Docker Desktop running
 - [ ] commercetools project credentials
-- [ ] Redis instance (Upstash recommended for serverless)
+- [ ] Redis instance (Upstash recommended for serverless; staging uses Upstash)
 
 ## 🚀 Deployment Steps
 

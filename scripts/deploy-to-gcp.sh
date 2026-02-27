@@ -83,7 +83,7 @@ fi
 API_IMAGE="$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACT_REGISTRY_REPO/api:$GIT_SHA"
 WEB_IMAGE="$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACT_REGISTRY_REPO/web:$GIT_SHA"
 
-echo -e "${BLUE}Step 1/5: Building Docker images...${NC}"
+echo -e "${BLUE}Step 1/5: Building API Docker image...${NC}"
 echo "API Image: $API_IMAGE"
 
 # Build API image
@@ -97,31 +97,7 @@ docker build \
 echo -e "${GREEN}✓${NC} API image built"
 
 echo ""
-echo "Web Image: $WEB_IMAGE"
-
-# Get API URL for web build args (use existing service URL or placeholder)
-if [[ "$ENVIRONMENT" == "production" ]]; then
-    NEXT_PUBLIC_API_URL=${PROD_API_URL:-"https://api-placeholder.run.app"}
-    NEXT_PUBLIC_APP_URL=${PROD_WEB_URL:-"https://web-placeholder.run.app"}
-else
-    NEXT_PUBLIC_API_URL=${STAGING_API_URL:-"https://api-staging-placeholder.run.app"}
-    NEXT_PUBLIC_APP_URL=${STAGING_WEB_URL:-"https://web-staging-placeholder.run.app"}
-fi
-
-# Build Web image
-docker build \
-    -f apps/web/Dockerfile \
-    -t "$WEB_IMAGE" \
-    --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
-    --build-arg NEXT_PUBLIC_APP_URL="$NEXT_PUBLIC_APP_URL" \
-    . || {
-    echo -e "${RED}Failed to build Web image${NC}"
-    exit 1
-}
-echo -e "${GREEN}✓${NC} Web image built"
-
-echo ""
-echo -e "${BLUE}Step 2/5: Pushing images to Artifact Registry...${NC}"
+echo -e "${BLUE}Step 2/5: Pushing API image to Artifact Registry...${NC}"
 
 # Configure Docker authentication
 gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
@@ -133,16 +109,10 @@ docker push "$API_IMAGE" || {
 }
 echo -e "${GREEN}✓${NC} API image pushed"
 
-# Push Web image
-docker push "$WEB_IMAGE" || {
-    echo -e "${RED}Failed to push Web image${NC}"
-    exit 1
-}
-echo -e "${GREEN}✓${NC} Web image pushed"
-
 echo ""
 echo -e "${BLUE}Step 3/5: Deploying API service to Cloud Run...${NC}"
 
+# First pass: Deploy API without ALLOWED_ORIGIN to get the service
 gcloud run deploy "$API_SERVICE" \
     --image="$API_IMAGE" \
     --platform=managed \
@@ -152,7 +122,7 @@ gcloud run deploy "$API_SERVICE" \
     --timeout=300 \
     --min-instances="$API_MIN_INSTANCES" \
     --max-instances="$API_MAX_INSTANCES" \
-    --ingress=internal-and-cloud-load-balancing \
+    --ingress=all \
     --set-env-vars=NODE_ENV=production \
     --set-secrets=CTP_PROJECT_KEY=CT_PROJECT_KEY:latest \
     --set-secrets=CTP_CLIENT_ID=CT_CLIENT_ID:latest \
@@ -173,7 +143,38 @@ API_URL=$(gcloud run services describe "$API_SERVICE" \
 echo -e "${GREEN}✓${NC} API deployed: $API_URL"
 
 echo ""
-echo -e "${BLUE}Step 4/5: Deploying Web service to Cloud Run...${NC}"
+echo -e "${BLUE}Step 4/5: Building and pushing Web image...${NC}"
+
+echo "Web Image: $WEB_IMAGE"
+
+# Get Web build args (API URL is now known)
+if [[ "$ENVIRONMENT" == "production" ]]; then
+    NEXT_PUBLIC_APP_URL=${PROD_WEB_URL:-"https://web-placeholder.run.app"}
+else
+    NEXT_PUBLIC_APP_URL=${STAGING_WEB_URL:-"https://web-staging-placeholder.run.app"}
+fi
+
+# Build Web image with real API URL
+docker build \
+    -f apps/web/Dockerfile \
+    -t "$WEB_IMAGE" \
+    --build-arg NEXT_PUBLIC_API_URL="$API_URL" \
+    --build-arg NEXT_PUBLIC_APP_URL="$NEXT_PUBLIC_APP_URL" \
+    . || {
+    echo -e "${RED}Failed to build Web image${NC}"
+    exit 1
+}
+echo -e "${GREEN}✓${NC} Web image built"
+
+# Push Web image
+docker push "$WEB_IMAGE" || {
+    echo -e "${RED}Failed to push Web image${NC}"
+    exit 1
+}
+echo -e "${GREEN}✓${NC} Web image pushed"
+
+echo ""
+echo -e "${BLUE}Step 5/5: Deploying Web service to Cloud Run...${NC}"
 
 gcloud run deploy "$WEB_SERVICE" \
     --image="$WEB_IMAGE" \
@@ -198,7 +199,21 @@ WEB_URL=$(gcloud run services describe "$WEB_SERVICE" \
 echo -e "${GREEN}✓${NC} Web deployed: $WEB_URL"
 
 echo ""
-echo -e "${BLUE}Step 5/5: Verifying deployment...${NC}"
+echo -e "${BLUE}Step 5/6: Updating API CORS configuration...${NC}"
+
+# Update API service with correct ALLOWED_ORIGIN (web service URL)
+gcloud run deploy "$API_SERVICE" \
+    --image="$API_IMAGE" \
+    --platform=managed \
+    --region="$GCP_REGION" \
+    --update-env-vars=ALLOWED_ORIGIN="$WEB_URL" || {
+    echo -e "${RED}Failed to update API CORS configuration${NC}"
+    exit 1
+}
+echo -e "${GREEN}✓${NC} API CORS updated to allow: $WEB_URL"
+
+echo ""
+echo -e "${BLUE}Step 6/6: Verifying deployment...${NC}"
 
 # Health check API
 API_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" || echo "000")

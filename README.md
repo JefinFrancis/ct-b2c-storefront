@@ -188,6 +188,13 @@ npx turbo build --force            # Rebuild all packages (ignore cache)
 | NestJS health | http://localhost:8080/health | Cloud Run health check endpoint |
 | Redis | localhost:6379 | Connect with RedisInsight or redis-cli |
 
+## Staging URLs
+
+| Service | URL | Notes |
+|---|---|---|
+| Web (staging) | https://web-staging-34a3uja3ga-uc.a.run.app | Public storefront |
+| API (staging) | https://api-staging-34a3uja3ga-uc.a.run.app | Public API (ingress=all) |
+
 ## Seeding Sample Data
 
 If you haven't run the seed script during setup:
