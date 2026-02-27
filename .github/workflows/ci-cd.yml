@@ -47,14 +47,14 @@ jobs:
           REDIS_URL: redis://localhost:6379
           NEXT_PUBLIC_API_URL: http://localhost:8080
 
-  build-and-push:
-    name: Build & Push Docker Images
+  build-and-push-api:
+    name: Build & Push API Image
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     outputs:
       api-image: ${{ steps.image-tags.outputs.api-image }}
-      web-image: ${{ steps.image-tags.outputs.web-image }}
+      git-sha: ${{ steps.image-tags.outputs.git-sha }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,43 +75,30 @@ jobs:
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           API_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/api:${SHORT_SHA}"
-          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}"
           echo "api-image=${API_IMAGE}" >> $GITHUB_OUTPUT
-          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
+          echo "git-sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "API Image: ${API_IMAGE}"
-          echo "Web Image: ${WEB_IMAGE}"
 
       - name: Build and push API image
         run: |
           docker build \
             -f apps/api/Dockerfile \
             -t ${{ steps.image-tags.outputs.api-image }} \
-            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/api:latest \
             .
           docker push ${{ steps.image-tags.outputs.api-image }}
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/api:latest
-
-      - name: Build and push Web image
-        run: |
-          docker build \
-            -f apps/web/Dockerfile \
-            -t ${{ steps.image-tags.outputs.web-image }} \
-            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest \
-            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.PROD_API_URL }} \
-            --build-arg NEXT_PUBLIC_APP_URL=${{ secrets.PROD_WEB_URL }} \
-            .
-          docker push ${{ steps.image-tags.outputs.web-image }}
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest
 
   deploy-staging:
     name: Deploy to Staging
-    needs: build-and-push
+    needs: build-and-push-api
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment:
       name: staging
       url: https://ct-b2c-web-staging-${{ secrets.GCP_PROJECT_ID }}.run.app
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -120,10 +107,13 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
       - name: Deploy API to Cloud Run (Staging)
         run: |
           gcloud run deploy api-staging \
-            --image=${{ needs.build-and-push.outputs.api-image }} \
+            --image=${{ needs.build-and-push-api.outputs.api-image }} \
             --platform=managed \
             --region=${{ env.GCP_REGION }} \
             --memory=1Gi \
@@ -149,10 +139,34 @@ jobs:
           echo "api-url=${API_URL}" >> $GITHUB_OUTPUT
           echo "API Staging URL: ${API_URL}"
 
+      - name: Get existing Web staging URL
+        id: web-url-check
+        run: |
+          WEB_URL=$(gcloud run services describe web-staging --region=${{ env.GCP_REGION }} --format='value(status.url)' 2>/dev/null || echo "")
+          if [ -z "$WEB_URL" ]; then
+            WEB_URL="https://web-staging-placeholder.run.app"
+          fi
+          echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
+          echo "Web URL for build: ${WEB_URL}"
+
+      - name: Build and push Web image (Staging)
+        id: web-image
+        run: |
+          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${{ needs.build-and-push-api.outputs.git-sha }}-staging"
+          docker build \
+            -f apps/web/Dockerfile \
+            -t ${WEB_IMAGE} \
+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ steps.web-url-check.outputs.web-url }} \
+            .
+          docker push ${WEB_IMAGE}
+          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
+          echo "Web Image: ${WEB_IMAGE}"
+
       - name: Deploy Web to Cloud Run (Staging)
         run: |
           gcloud run deploy web-staging \
-            --image=${{ needs.build-and-push.outputs.web-image }} \
+            --image=${{ steps.web-image.outputs.web-image }} \
             --platform=managed \
             --region=${{ env.GCP_REGION }} \
             --memory=512Mi \
@@ -174,13 +188,16 @@ jobs:
 
   deploy-production:
     name: Deploy to Production
-    needs: [build-and-push, deploy-staging]
+    needs: [build-and-push-api, deploy-staging]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
       url: https://ct-b2c-web-${{ secrets.GCP_PROJECT_ID }}.run.app
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -189,10 +206,13 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
       - name: Deploy API to Cloud Run (Production)
         run: |
           gcloud run deploy api \
-            --image=${{ needs.build-and-push.outputs.api-image }} \
+            --image=${{ needs.build-and-push-api.outputs.api-image }} \
             --platform=managed \
             --region=${{ env.GCP_REGION }} \
             --memory=2Gi \
@@ -218,10 +238,34 @@ jobs:
           echo "api-url=${API_URL}" >> $GITHUB_OUTPUT
           echo "API Production URL: ${API_URL}"
 
+      - name: Get existing Web production URL
+        id: web-url-check
+        run: |
+          WEB_URL=$(gcloud run services describe web --region=${{ env.GCP_REGION }} --format='value(status.url)' 2>/dev/null || echo "")
+          if [ -z "$WEB_URL" ]; then
+            WEB_URL="https://web-placeholder.run.app"
+          fi
+          echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
+          echo "Web URL for build: ${WEB_URL}"
+
+      - name: Build and push Web image (Production)
+        id: web-image
+        run: |
+          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${{ needs.build-and-push-api.outputs.git-sha }}"
+          docker build \
+            -f apps/web/Dockerfile \
+            -t ${WEB_IMAGE} \
+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ steps.web-url-check.outputs.web-url }} \
+            .
+          docker push ${WEB_IMAGE}
+          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
+          echo "Web Image: ${WEB_IMAGE}"
+
       - name: Deploy Web to Cloud Run (Production)
         run: |
           gcloud run deploy web \
-            --image=${{ needs.build-and-push.outputs.web-image }} \
+            --image=${{ steps.web-image.outputs.web-image }} \
             --platform=managed \
             --region=${{ env.GCP_REGION }} \
             --memory=1Gi \

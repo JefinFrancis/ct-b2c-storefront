@@ -83,7 +83,7 @@ fi
 API_IMAGE="$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACT_REGISTRY_REPO/api:$GIT_SHA"
 WEB_IMAGE="$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACT_REGISTRY_REPO/web:$GIT_SHA"
 
-echo -e "${BLUE}Step 1/5: Building Docker images...${NC}"
+echo -e "${BLUE}Step 1/6: Building API Docker image...${NC}"
 echo "API Image: $API_IMAGE"
 
 # Build API image
@@ -97,31 +97,7 @@ docker build \
 echo -e "${GREEN}✓${NC} API image built"
 
 echo ""
-echo "Web Image: $WEB_IMAGE"
-
-# Get API URL for web build args (use existing service URL or placeholder)
-if [[ "$ENVIRONMENT" == "production" ]]; then
-    NEXT_PUBLIC_API_URL=${PROD_API_URL:-"https://api-placeholder.run.app"}
-    NEXT_PUBLIC_APP_URL=${PROD_WEB_URL:-"https://web-placeholder.run.app"}
-else
-    NEXT_PUBLIC_API_URL=${STAGING_API_URL:-"https://api-staging-placeholder.run.app"}
-    NEXT_PUBLIC_APP_URL=${STAGING_WEB_URL:-"https://web-staging-placeholder.run.app"}
-fi
-
-# Build Web image
-docker build \
-    -f apps/web/Dockerfile \
-    -t "$WEB_IMAGE" \
-    --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
-    --build-arg NEXT_PUBLIC_APP_URL="$NEXT_PUBLIC_APP_URL" \
-    . || {
-    echo -e "${RED}Failed to build Web image${NC}"
-    exit 1
-}
-echo -e "${GREEN}✓${NC} Web image built"
-
-echo ""
-echo -e "${BLUE}Step 2/5: Pushing images to Artifact Registry...${NC}"
+echo -e "${BLUE}Step 2/6: Pushing API image to Artifact Registry...${NC}"
 
 # Configure Docker authentication
 gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
@@ -133,15 +109,8 @@ docker push "$API_IMAGE" || {
 }
 echo -e "${GREEN}✓${NC} API image pushed"
 
-# Push Web image
-docker push "$WEB_IMAGE" || {
-    echo -e "${RED}Failed to push Web image${NC}"
-    exit 1
-}
-echo -e "${GREEN}✓${NC} Web image pushed"
-
 echo ""
-echo -e "${BLUE}Step 3/5: Deploying API service to Cloud Run...${NC}"
+echo -e "${BLUE}Step 3/6: Deploying API service to Cloud Run...${NC}"
 
 gcloud run deploy "$API_SERVICE" \
     --image="$API_IMAGE" \
@@ -173,7 +142,50 @@ API_URL=$(gcloud run services describe "$API_SERVICE" \
 echo -e "${GREEN}✓${NC} API deployed: $API_URL"
 
 echo ""
-echo -e "${BLUE}Step 4/5: Deploying Web service to Cloud Run...${NC}"
+echo -e "${BLUE}Step 4/6: Building Web Docker image with API URL...${NC}"
+echo "Web Image: $WEB_IMAGE"
+echo "API URL: $API_URL"
+
+# Get Web URL (if service exists) or use placeholder
+EXISTING_WEB_URL=$(gcloud run services describe "$WEB_SERVICE" \
+    --region="$GCP_REGION" \
+    --format='value(status.url)' 2>/dev/null || echo "")
+
+if [[ -n "$EXISTING_WEB_URL" ]]; then
+    NEXT_PUBLIC_APP_URL="$EXISTING_WEB_URL"
+else
+    # Use placeholder for first deployment
+    if [[ "$ENVIRONMENT" == "production" ]]; then
+        NEXT_PUBLIC_APP_URL="https://web-placeholder.run.app"
+    else
+        NEXT_PUBLIC_APP_URL="https://web-staging-placeholder.run.app"
+    fi
+fi
+
+# Build Web image with actual API URL
+docker build \
+    -f apps/web/Dockerfile \
+    -t "$WEB_IMAGE" \
+    --build-arg NEXT_PUBLIC_API_URL="$API_URL" \
+    --build-arg NEXT_PUBLIC_APP_URL="$NEXT_PUBLIC_APP_URL" \
+    . || {
+    echo -e "${RED}Failed to build Web image${NC}"
+    exit 1
+}
+echo -e "${GREEN}✓${NC} Web image built"
+
+echo ""
+echo -e "${BLUE}Step 5/6: Pushing Web image to Artifact Registry...${NC}"
+
+# Push Web image
+docker push "$WEB_IMAGE" || {
+    echo -e "${RED}Failed to push Web image${NC}"
+    exit 1
+}
+echo -e "${GREEN}✓${NC} Web image pushed"
+
+echo ""
+echo -e "${BLUE}Step 6/6: Deploying Web service to Cloud Run...${NC}"
 
 gcloud run deploy "$WEB_SERVICE" \
     --image="$WEB_IMAGE" \
@@ -198,7 +210,7 @@ WEB_URL=$(gcloud run services describe "$WEB_SERVICE" \
 echo -e "${GREEN}✓${NC} Web deployed: $WEB_URL"
 
 echo ""
-echo -e "${BLUE}Step 5/5: Verifying deployment...${NC}"
+echo -e "${BLUE}Verifying deployment...${NC}"
 
 # Health check API
 API_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" || echo "000")
