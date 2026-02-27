@@ -1,0 +1,72 @@
+services:
+
+  # ── Redis (local container — replaced by Upstash in staging/prod) ─────────
+  redis:
+    image: redis:7-alpine
+    container_name: ct-redis
+    ports:
+      - "6380:6379"                    # Use 6380 to avoid conflicts with other Redis
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── NestJS API ──────────────────────────────────────────────────────────
+  api:
+    image: node:20
+    container_name: ct-api
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./apps/api/.env.local
+    environment:
+      NODE_ENV: development
+      PORT: "8080"
+      REDIS_URL: redis://redis:6379    # Internal Docker network (container port)
+      ALLOWED_ORIGIN: http://localhost:3001  # Match the web port
+    volumes:
+      - .:/app                         # Mount entire monorepo (including host node_modules)
+    command: sh -c "cd apps/api && rm -f tsconfig.tsbuildinfo && npx nest build && npx nest start --watch"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Next.js Web ─────────────────────────────────────────────────────────
+  web:
+    image: node:20
+    container_name: ct-web
+    working_dir: /app
+    ports:
+      - "3001:3000"                    # Use 3001 to avoid conflicts
+    env_file:
+      - ./apps/web/.env.local
+    environment:
+      NODE_ENV: development
+      # Server-side fetch uses Docker service name (internal network)
+      INTERNAL_API_URL: http://api:8080
+      # Browser-side fetch uses localhost (external)
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - .:/app                         # Mount entire monorepo (including host node_modules)
+    command: npm run dev --workspace=web
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  redis-data:
+
+networks:
+  default:
+    name: ct-b2c-network

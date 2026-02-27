@@ -1,0 +1,477 @@
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { CommercetoolsService } from "../commercetools/commercetools.service";
+import { RedisService } from "../redis/redis.service";
+
+interface AddItemInput {
+  productId: string;
+  variantId: number;
+  quantity: number;
+}
+
+// Session-to-cart mapping TTL: 30 days
+const SESSION_CART_TTL = 30 * 24 * 60 * 60;
+
+@Injectable()
+export class CartService {
+  constructor(
+    private readonly ct: CommercetoolsService,
+    private readonly redis: RedisService,
+  ) {}
+
+  /**
+   * Create a new cart using client credentials (admin API root).
+   * This ensures carts are always visible in the CT Merchant Center.
+   */
+  async create(customerId?: string, customerEmail?: string) {
+    const api = this.ct.getApiRoot();
+    const response = await api
+      .carts()
+      .post({
+        body: {
+          currency: "USD",
+          country: "US",
+          ...(customerId ? { customerId } : {}),
+          ...(customerEmail ? { customerEmail } : {}),
+        },
+      })
+      .execute();
+    return response.body;
+  }
+
+  async findById(id: string) {
+    const api = this.ct.getApiRoot();
+    try {
+      const response = await api.carts().withId({ ID: id }).get().execute();
+      return response.body;
+    } catch (error) {
+      throw new NotFoundException(`Cart with id "${id}" not found`);
+    }
+  }
+
+  async addItem(cartId: string, input: AddItemInput) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "addLineItem",
+              productId: input.productId,
+              variantId: input.variantId,
+              quantity: input.quantity,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  async updateItem(cartId: string, lineItemId: string, quantity: number) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "changeLineItemQuantity",
+              lineItemId,
+              quantity,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  async removeItem(cartId: string, lineItemId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "removeLineItem",
+              lineItemId,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Session storage methods: associate sessionId → cartId in Redis
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Store cartId for a session (30-day TTL).
+   */
+  async setCartIdForSession(sessionId: string, cartId: string): Promise<void> {
+    await this.redis.set(`session:${sessionId}`, cartId, SESSION_CART_TTL);
+  }
+
+  /**
+   * Get cartId associated with a session.
+   */
+  async getCartIdForSession(sessionId: string): Promise<string | null> {
+    return this.redis.get<string>(`session:${sessionId}`);
+  }
+
+  /**
+   * Get or create a cart for a session.
+   * If session has existing cart, return it. Otherwise, create new cart and associate.
+   */
+  async getOrCreateCartForSession(sessionId: string) {
+    const existingCartId = await this.getCartIdForSession(sessionId);
+
+    if (existingCartId) {
+      try {
+        const cart = await this.findById(existingCartId);
+        // Only return active carts
+        if (cart.cartState === "Active") {
+          return cart;
+        }
+      } catch {
+        // Cart not found or invalid, create new one
+      }
+    }
+
+    // Create new cart and associate with session
+    const newCart = await this.create();
+    await this.setCartIdForSession(sessionId, newCart.id);
+    return newCart;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Checkout methods: shipping/billing address and shipping method
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Set shipping address on cart.
+   */
+  async setShippingAddress(
+    cartId: string,
+    address: {
+      firstName: string;
+      lastName: string;
+      streetName: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city: string;
+      region?: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "setShippingAddress",
+              address,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Set billing address on cart.
+   */
+  async setBillingAddress(
+    cartId: string,
+    address: {
+      firstName: string;
+      lastName: string;
+      streetName: string;
+      streetNumber?: string;
+      additionalStreetInfo?: string;
+      city: string;
+      region?: string;
+      postalCode: string;
+      country: string;
+      phone?: string;
+      email?: string;
+    },
+  ) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "setBillingAddress",
+              address,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Get available shipping methods for a cart (based on shipping address).
+   * Maps CT zoneRates structure to a flat ShippingMethod shape.
+   */
+  async getShippingMethods(cartId: string) {
+    const api = this.ct.getApiRoot();
+    // Ensure cart exists and has a shipping address
+    await this.findById(cartId);
+
+    const response = await api
+      .shippingMethods()
+      .matchingCart()
+      .get({
+        queryArgs: {
+          cartId,
+        },
+      })
+      .execute();
+
+    // Map CT ShippingMethod → our flat ShippingMethod type
+    return response.body.results.map((m) => {
+      // Extract the first matching shipping rate price
+      const rate = m.zoneRates?.[0]?.shippingRates?.[0];
+      const price = rate?.price ?? {
+        currencyCode: "USD",
+        centAmount: 0,
+        fractionDigits: 2,
+      };
+
+      return {
+        id: m.id,
+        name: m.name ?? m.localizedName?.en ?? m.key ?? "Shipping",
+        description:
+          m.description ?? m.localizedDescription?.en ?? undefined,
+        price: {
+          currencyCode: price.currencyCode,
+          centAmount: price.centAmount,
+          fractionDigits: price.fractionDigits,
+        },
+        deliveryTime: undefined,
+      };
+    });
+  }
+
+  /**
+   * Set customer ID and email on cart.
+   * This associates an anonymous cart with a logged-in customer before order creation.
+   */
+  async setCustomerId(
+    cartId: string,
+    customerId: string,
+    customerEmail: string,
+  ) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const actions: Array<
+      | { action: "setCustomerId"; customerId: string }
+      | { action: "setCustomerEmail"; email: string }
+    > = [];
+
+    // Only set customerId if not already set
+    if (cart.customerId !== customerId) {
+      actions.push({ action: "setCustomerId", customerId });
+    }
+
+    // Always ensure customerEmail is set
+    if (cart.customerEmail !== customerEmail) {
+      actions.push({ action: "setCustomerEmail", email: customerEmail });
+    }
+
+    if (actions.length === 0) {
+      return cart; // Already associated
+    }
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions,
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Set shipping method on cart.
+   */
+  async setShippingMethod(cartId: string, shippingMethodId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "setShippingMethod",
+              shippingMethod: {
+                id: shippingMethodId,
+                typeId: "shipping-method",
+              },
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Discount code methods
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Add a discount code to the cart.
+   */
+  async addDiscountCode(cartId: string, code: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "addDiscountCode",
+              code,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Remove a discount code from the cart.
+   */
+  async removeDiscountCode(cartId: string, discountCodeId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "removeDiscountCode",
+              discountCode: {
+                typeId: "discount-code",
+                id: discountCodeId,
+              },
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Recalculate the cart (e.g., after address change, tax recalculation).
+   */
+  async recalculate(cartId: string) {
+    const api = this.ct.getApiRoot();
+    const cart = await this.findById(cartId);
+
+    const response = await api
+      .carts()
+      .withId({ ID: cartId })
+      .post({
+        body: {
+          version: cart.version,
+          actions: [
+            {
+              action: "recalculate",
+              updateProductData: true,
+            },
+          ],
+        },
+      })
+      .execute();
+
+    return response.body;
+  }
+
+  /**
+   * Get the active cart for a customer (if any).
+   */
+  async findActiveCartByCustomer(customerId: string) {
+    const api = this.ct.getApiRoot();
+    try {
+      const response = await api
+        .carts()
+        .get({
+          queryArgs: {
+            where: `customerId="${customerId}" and cartState="Active"`,
+            sort: "lastModifiedAt desc",
+            limit: 1,
+          },
+        })
+        .execute();
+
+      return response.body.results[0] ?? null;
+    } catch {
+      return null;
+    }
+  }
+}

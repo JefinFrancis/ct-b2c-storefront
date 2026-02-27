@@ -1,0 +1,28 @@
+{
+  "name": "ct-b2c-storefront",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test --filter=api --filter=web",
+    "test:api": "turbo test --filter=api",
+    "test:web": "turbo test --filter=web",
+    "build:api": "turbo build --filter=api",
+    "build:web": "turbo build --filter=web"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.3",
+    "prettier": "^3.5.1"
+  },
+  "packageManager": "npm@10.9.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

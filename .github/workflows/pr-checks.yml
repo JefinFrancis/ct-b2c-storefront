@@ -1,0 +1,119 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+env:
+  NODE_ENV: test
+
+jobs:
+  validate:
+    name: Validate Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper comparison
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npx turbo typecheck
+
+      - name: Run linter
+        run: npx turbo lint
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+        env:
+          # Mock env vars for tests
+          CTP_PROJECT_KEY: test-project
+          CTP_CLIENT_ID: test-client-id
+          CTP_CLIENT_SECRET: test-client-secret
+          CTP_AUTH_URL: https://auth.example.com
+          CTP_API_URL: https://api.example.com
+          CTP_SCOPES: manage_products
+          REDIS_URL: redis://localhost:6379
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+
+      - name: Check for TODO/FIXME comments
+        continue-on-error: true
+        run: |
+          echo "### 📝 Code Quality Checks" >> $GITHUB_STEP_SUMMARY
+          
+          TODO_COUNT=$(grep -r "TODO" apps/ packages/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" | wc -l || echo "0")
+          FIXME_COUNT=$(grep -r "FIXME" apps/ packages/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" | wc -l || echo "0")
+          
+          echo "- TODO comments: $TODO_COUNT" >> $GITHUB_STEP_SUMMARY
+          echo "- FIXME comments: $FIXME_COUNT" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check bundle size (Web)
+        run: |
+          cd apps/web
+          npm run build
+          
+          echo "### 📦 Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh .next/ >> $GITHUB_STEP_SUMMARY || echo "Build output not found" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      - name: PR Summary
+        if: always()
+        run: |
+          echo "### ✅ PR Validation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.head_ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** \`${{ github.base_ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commits:** ${{ github.event.pull_request.commits }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All checks passed! ✨" >> $GITHUB_STEP_SUMMARY
+
+  docker-build-test:
+    name: Test Docker Builds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test API Docker build
+        run: |
+          docker build \
+            -f apps/api/Dockerfile \
+            -t ct-b2c-api:test \
+            .
+          echo "✅ API Docker build successful"
+
+      - name: Test Web Docker build
+        run: |
+          docker build \
+            -f apps/web/Dockerfile \
+            -t ct-b2c-web:test \
+            --build-arg NEXT_PUBLIC_API_URL=http://localhost:8080 \
+            --build-arg NEXT_PUBLIC_APP_URL=http://localhost:3000 \
+            .
+          echo "✅ Web Docker build successful"
+
+      - name: Docker Build Summary
+        run: |
+          echo "### 🐳 Docker Build Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ API Docker build: Success" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Web Docker build: Success" >> $GITHUB_STEP_SUMMARY

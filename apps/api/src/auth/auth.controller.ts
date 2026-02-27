@@ -1,0 +1,48 @@
+import { Controller, Post, Get, Body, UseGuards, Request } from "@nestjs/common";
+import { AuthService } from "./auth.service";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+
+interface LoginDto {
+  email: string;
+  password: string;
+  anonymousCartId?: string;
+}
+
+interface RegisterDto {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  anonymousCartId?: string;
+}
+
+@Controller("auth")
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Post("login")
+  login(@Body() body: LoginDto) {
+    return this.authService.login(body.email, body.password, body.anonymousCartId);
+  }
+
+  @Post("register")
+  register(@Body() body: RegisterDto) {
+    return this.authService.register(body, body.anonymousCartId);
+  }
+
+  @Post("forgot-password")
+  forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post("reset-password")
+  resetPassword(@Body() body: { tokenValue: string; newPassword: string }) {
+    return this.authService.resetPassword(body.tokenValue, body.newPassword);
+  }
+
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  getMe(@Request() req: { user: { id: string; email: string } }) {
+    return this.authService.getMe(req.user.id);
+  }
+}
