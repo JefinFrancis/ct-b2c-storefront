@@ -39,15 +39,34 @@
 
 **Status:** Code changes complete; `npm test` passed (warnings in web tests only).
 
-## Session 25: SSR API URL Fixes (GCP)
+## Session 25: SSR API URL & CORS Fixes (GCP)
 
-**Objective:** Ensure SSR and client bundles use the real API URL in Cloud Run deployments.
+**Objective:** Fix frontend-backend connectivity in Cloud Run staging by correcting API URLs and CORS origins.
 
 **Branch:** `fix/ssr-api-url` (created from develop)
 
+**Issues Identified:**
+1. Primary: API was using placeholder URL (`https://api-staging-placeholder.run.app`) due to build-time args not being updated with actual Cloud Run URL
+2. Secondary: CORS origin not configured in API service, defaulting to localhost-only origins, rejecting requests from Cloud Run web service
+
+**Root Causes:**
+- Pre-built web image used placeholder API URL as a fallback
+- Deployment script wasn't setting `ALLOWED_ORIGIN` environment variable for API service, so `apps/api/src/main.ts` defaulted to `http://localhost:3000,http://localhost:3001`
+- API service received requests from real Cloud Run web URL (e.g., `https://web-staging-34a3uja3ga-uc.a.run.app`) but rejected them due to CORS whitelist mismatch
+
 **Changes Made:**
 1. **Deploy script ordering fix:**
-   - `scripts/deploy-to-gcp.sh` now builds the web image after API deploy and uses the real `API_URL` for `NEXT_PUBLIC_API_URL`.
+   - `scripts/deploy-to-gcp.sh` now builds the web image after API deploy and uses the real `API_URL` for `NEXT_PUBLIC_API_URL` and `INTERNAL_API_URL` build args
+   
+2. **Added CORS configuration step (NEW - Session 25 continued):**
+   - After web service deployment, deployment script now redeploys API service with `--update-env-vars=ALLOWED_ORIGIN="$WEB_URL"`
+   - Two-step deploy ensures API has correct web service origin whitelisted
+   - Step renamed from "5/5" to "6/6" (new Step 5 does CORS update)
+   
+**Technical Details:**
+- API CORS config in `main.ts`: `origin: (origin, callback) => { if (!origin || allowedOrigins.includes(origin)) callback(null, true) else callback(error) }`
+- Without `ALLOWED_ORIGIN` env var, defaults to localhost-only 
+- Deployment script now: Deploy API (step 3) → Deploy Web (step 4) → Update API CORS (step 5) → Verify both (step 6)
    - Prevents client bundles from baking placeholder API URLs.
 
 2. **PLP SSR error hint:**
