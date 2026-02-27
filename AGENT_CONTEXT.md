@@ -1,10 +1,10 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-25 — Agent Session 21 / GitFlow Enforcement Injected into BMAD Workflows
+2026-02-27 — Agent Session 22 / GCP Deployment Configuration Complete
 
 ## Project State
-✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests, BMAD framework integrated, comprehensive documentation suite created. GitHub repository public with GitFlow branches (main, develop) protected. commercetools project (c-spire-oe-demo, US region) fully configured with Admin API client. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) and Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments (mock PSP), wishlist, discount codes, cart merge (anonymousCartSignInMode), billing addresses. Dark mode + responsive design throughout. Unit testing 151 tests (64 API/Jest + 87 Web/Vitest). Ready for CI/CD pipeline and GCP Cloud Run deployment.
+✅ **DEPLOYMENT-READY** — All 7 B2C features complete with 151 passing tests. **GCP deployment configuration fully implemented**: updated Dockerfiles for monorepo structure, GitHub Actions CI/CD pipeline (test → build → deploy staging → deploy prod), automated deployment scripts (setup-gcp.sh, deploy-to-gcp.sh), comprehensive deployment checklist. GitHub repository public with GitFlow branches (main, develop) protected. commercetools project (c-spire-oe-demo, US region) fully configured with Admin API client. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) and Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments (mock PSP), wishlist, discount codes, cart merge (anonymousCartSignInMode), billing addresses. Dark mode + responsive design throughout. Unit testing 151 tests (64 API/Jest + 87 Web/Vitest). **Ready to deploy to GCP Cloud Run.**
 
 **Documentation Suite Created (Session 20):**
 - 8 comprehensive markdown files (15K+ words)
@@ -68,6 +68,74 @@
 - `quick-spec` — Creates tech specs (no code, no git needed)
 - `create-story` — Creates story files (no code, no git needed)
 - `code-review` — Reviews code (no new code, no git needed)
+
+## Session 22: GCP Deployment Configuration
+
+**Objective:** Implement complete GCP Cloud Run deployment infrastructure with CI/CD automation.
+
+**Branch:** `feature/CT-8-gcp-deployment-setup` (created from develop)
+
+**Changes Made:**
+
+1. **Updated Dockerfiles for Monorepo Structure:**
+   - `apps/api/Dockerfile` — Fixed to build from root context using Turborepo
+   - `apps/web/Dockerfile` — Fixed to build from root context with standalone output
+   - Multi-stage builds: deps → builder → prod-deps → runner
+   - Proper handling of shared packages (@ct-b2c/types, @ct-b2c/config)
+   - Build-time arguments for Next.js public env vars
+
+2. **GitHub Actions CI/CD Pipeline (.github/workflows/ci-cd.yml):**
+   - **Test Job:** Runs on PR/push, executes typecheck + lint + test suite
+   - **Build & Push Job:** Builds Docker images, pushes to Artifact Registry (main branch only)
+   - **Deploy Staging Job:** Deploys to Cloud Run staging environment
+   - **Deploy Production Job:** Deploys to Cloud Run production (requires manual approval)
+   - Image tagging with Git SHA for version tracking
+   - Secrets managed via Secret Manager integration
+   - Automatic Cloud Run URL injection into web service
+
+3. **Deployment Automation Scripts:**
+   - `scripts/setup-gcp.sh` — Initial GCP project setup:
+     - Enables required APIs (Cloud Run, Artifact Registry, Secret Manager, Cloud Build)
+     - Creates Artifact Registry repository
+     - Creates/updates secrets in Secret Manager
+     - Configures IAM permissions for Cloud Run
+     - Interactive prompts for commercetools and Redis credentials
+   - `scripts/deploy-to-gcp.sh` — Manual deployment script:
+     - Accepts staging/production parameter
+     - Builds Docker images locally
+     - Pushes to Artifact Registry
+     - Deploys to Cloud Run with environment-specific configs
+     - Runs health checks
+     - Displays deployed URLs
+
+4. **Configuration Files:**
+   - `.gcloudignore` — Excludes unnecessary files from GCP deployments
+   - `GCP_DEPLOYMENT_CHECKLIST.md` — Comprehensive step-by-step deployment guide:
+     - Prerequisites checklist
+     - Redis setup (Upstash recommended)
+     - GCP project configuration
+     - GitHub secrets setup
+     - Deployment verification
+     - Custom domain configuration
+     - Monitoring and troubleshooting
+
+5. **Environment Configuration:**
+   - **Staging:** min-instances=0 (scales to zero), 1Gi API + 512Mi Web
+   - **Production:** min-instances=1 (always-on), 2Gi API + 1Gi Web
+   - Secrets: CT credentials, Redis URLs (separate for staging/prod)
+   - API ingress: internal-and-cloud-load-balancing (callable by Web only)
+   - Web ingress: all (publicly accessible)
+
+**Testing:**
+- All 151 tests passing (64 API + 87 Web)
+- Build verification completed
+- Scripts made executable
+
+**Commit:**
+- Conventional commit: `feat(deployment): add GCP Cloud Run deployment configuration`
+- Commit hash: e4f67b3
+
+**Status:** Ready to push branch and create PR to develop. Next step: User must configure GCP project and deploy.
 
 ## Completed Work
 
