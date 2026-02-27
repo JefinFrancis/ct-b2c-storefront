@@ -46,20 +46,22 @@ jobs:
           CTP_SCOPES: manage_products
           REDIS_URL: redis://localhost:6379
           NEXT_PUBLIC_API_URL: http://localhost:8080
-+      
-+      - name: Test Summary
-+        if: always()
-+        run: |
-+          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-+          echo "- TypeCheck: ✅ Passed" >> $GITHUB_STEP_SUMMARY
-+          echo "- Lint: ✅ Passed" >> $GITHUB_STEP_SUMMARY
-+          echo "- Tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
-+
-+  build-api:
-+    name: Build & Push API Image
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeCheck: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+
+  build-api:
+    name: Build & Push API Image
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
     outputs:
       api-image: ${{ steps.image-tags.outputs.api-image }}
     steps:
@@ -94,13 +96,13 @@ jobs:
             .
           docker push ${{ steps.image-tags.outputs.api-image }}
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/api:latest
-+          
-+      - name: Build Summary
-+        run: |
-+          echo "### 🐳 API Image Built" >> $GITHUB_STEP_SUMMARY
-+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-+          echo "${{ steps.image-tags.outputs.api-image }}" >> $GITHUB_STEP_SUMMARY
-+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Build Summary
+        run: |
+          echo "### 🐳 API Image Built" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.image-tags.outputs.api-image }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   deploy-staging:
     name: Deploy to Staging
@@ -109,16 +111,13 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: staging
-    +    outputs:
-    +      api-url: ${{ steps.api-url.outputs.api-url }}
-    +      web-url: ${{ steps.web-url.outputs.web-url }}
-    +      - name: Checkout code
-    +        uses: actions/checkout@v4
-    +
-    +      - name: Configure Docker for Artifact Registry
-    +        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
-    +
+    outputs:
+      api-url: ${{ steps.api-url.outputs.api-url }}
+      web-url: ${{ steps.web-url.outputs.web-url }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -126,6 +125,9 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
       - name: Deploy API to Cloud Run (Staging)
         run: |
@@ -155,23 +157,23 @@ jobs:
           API_URL=$(gcloud run services describe api-staging --region=${{ env.GCP_REGION }} --format='value(status.url)')
           echo "api-url=${API_URL}" >> $GITHUB_OUTPUT
           echo "API Staging URL: ${API_URL}"
-+
-+      - name: Build staging web image
-+        id: build-web
-+        run: |
-+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-+          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}-staging"
-+          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
-+          
-+          docker build \
-+            -f apps/web/Dockerfile \
-+            -t "${WEB_IMAGE}" \
-+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
-+            --build-arg NEXT_PUBLIC_APP_URL=https://staging.ct-b2c-storefront.example.com \
-+            .
-+          
-+          docker push "${WEB_IMAGE}"
-+          echo "Pushed: ${WEB_IMAGE}"
+
+      - name: Build staging web image
+        id: build-web
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}-staging"
+          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
+
+          docker build \
+            -f apps/web/Dockerfile \
+            -t "${WEB_IMAGE}" \
+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
+            --build-arg NEXT_PUBLIC_APP_URL=https://staging.ct-b2c-storefront.example.com \
+            .
+
+          docker push "${WEB_IMAGE}"
+          echo "Pushed: ${WEB_IMAGE}"
 
       - name: Deploy Web to Cloud Run (Staging)
         run: |
@@ -189,14 +191,23 @@ jobs:
             --allow-unauthenticated
 
       - name: Get Web staging URL
-        +        id: web-url
+        id: web-url
         run: |
           WEB_URL=$(gcloud run services describe web-staging --region=${{ env.GCP_REGION }} --format='value(status.url)')
-          +          echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
+          echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
           echo "Web Staging URL: ${WEB_URL}"
+
+      - name: Update API CORS allowed origin (Staging)
+        run: |
+          gcloud run services update api-staging \
+            --region=${{ env.GCP_REGION }} \
+            --update-env-vars=ALLOWED_ORIGIN=${{ steps.web-url.outputs.web-url }},http://localhost:3000,http://localhost:3001
+
+      - name: Staging deployment summary
+        run: |
           echo "### 🚀 Staging Deployment Successful" >> $GITHUB_STEP_SUMMARY
           echo "- **API:** ${{ steps.api-url.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Web:** ${WEB_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web:** ${{ steps.web-url.outputs.web-url }}" >> $GITHUB_STEP_SUMMARY
 
   deploy-production:
     name: Deploy to Production
@@ -205,13 +216,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-    +      - name: Checkout code
-    +        uses: actions/checkout@v4
-    +
-    +      - name: Configure Docker for Artifact Registry
-    +        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
-    +
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -219,6 +227,9 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
       - name: Deploy API to Cloud Run (Production)
         run: |
@@ -248,25 +259,25 @@ jobs:
           API_URL=$(gcloud run services describe api --region=${{ env.GCP_REGION }} --format='value(status.url)')
           echo "api-url=${API_URL}" >> $GITHUB_OUTPUT
           echo "API Production URL: ${API_URL}"
-+
-+      - name: Build production web image
-+        id: build-web
-+        run: |
-+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-+          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}"
-+          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
-+          
-+          docker build \
-+            -f apps/web/Dockerfile \
-+            -t "${WEB_IMAGE}" \
-+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest \
-+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
-+            --build-arg NEXT_PUBLIC_APP_URL=https://ct-b2c-storefront.example.com \
-+            .
-+          
-+          docker push "${WEB_IMAGE}"
-+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest
-+          echo "Pushed: ${WEB_IMAGE}"
+
+      - name: Build production web image
+        id: build-web
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          WEB_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:${SHORT_SHA}"
+          echo "web-image=${WEB_IMAGE}" >> $GITHUB_OUTPUT
+
+          docker build \
+            -f apps/web/Dockerfile \
+            -t "${WEB_IMAGE}" \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest \
+            --build-arg NEXT_PUBLIC_API_URL=${{ steps.api-url.outputs.api-url }} \
+            --build-arg NEXT_PUBLIC_APP_URL=https://ct-b2c-storefront.example.com \
+            .
+
+          docker push "${WEB_IMAGE}"
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/web:latest
+          echo "Pushed: ${WEB_IMAGE}"
 
       - name: Deploy Web to Cloud Run (Production)
         run: |
@@ -284,11 +295,22 @@ jobs:
             --allow-unauthenticated
 
       - name: Get Web production URL
+        id: web-url
         run: |
           WEB_URL=$(gcloud run services describe web --region=${{ env.GCP_REGION }} --format='value(status.url)')
+          echo "web-url=${WEB_URL}" >> $GITHUB_OUTPUT
           echo "Web Production URL: ${WEB_URL}"
+
+      - name: Update API CORS allowed origin (Production)
+        run: |
+          gcloud run services update api \
+            --region=${{ env.GCP_REGION }} \
+            --update-env-vars=ALLOWED_ORIGIN=${{ steps.web-url.outputs.web-url }},http://localhost:3000,http://localhost:3001
+
+      - name: Production deployment summary
+        run: |
           echo "### ✅ Production Deployment Successful" >> $GITHUB_STEP_SUMMARY
-          +          echo "" >> $GITHUB_STEP_SUMMARY
-          +          echo "🎉 **Version:** \`$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Version:** \`$(echo ${{ github.sha }} | cut -c1-7)\`" >> $GITHUB_STEP_SUMMARY
           echo "- **API:** ${{ steps.api-url.outputs.api-url }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Web:** ${WEB_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web:** ${{ steps.web-url.outputs.web-url }}" >> $GITHUB_STEP_SUMMARY

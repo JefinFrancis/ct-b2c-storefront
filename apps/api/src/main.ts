@@ -25,9 +25,23 @@ async function bootstrap() {
     }),
   );
 
-  // CORS configuration
+  // CORS configuration — supports comma-separated origins for multi-environment deployments
+  const rawAllowedOrigins =
+    process.env.ALLOWED_ORIGIN ?? "http://localhost:3000,http://localhost:3001";
+  const allowedOrigins = rawAllowedOrigins
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGIN ?? "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (server-to-server calls, health checks)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
   });
 
