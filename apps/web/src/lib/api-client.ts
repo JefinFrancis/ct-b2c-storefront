@@ -16,11 +16,15 @@ import type {
   Payment,
 } from "@ct-b2c/types";
 
-// Server-side: use internal Docker hostname; browser: use public URL
+// Server-side: prefer internal URL; fall back to public URL if missing.
 const getApiBase = () => {
   if (typeof window === "undefined") {
     // Server-side
-    return process.env.INTERNAL_API_URL ?? "http://localhost:8080";
+    return (
+      process.env.INTERNAL_API_URL ??
+      process.env.NEXT_PUBLIC_API_URL ??
+      "http://localhost:8080"
+    );
   }
   // Client-side
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
