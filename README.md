@@ -1,6 +1,17 @@
 # CT B2C Storefront
 
 A composable commerce B2C storefront built with **commercetools**, **NestJS**, **Next.js**, and **Turborepo**. Features full e-commerce functionality including product browsing, cart management, authentication, checkout flow, order history, wishlist, discount codes, and customer address management.
++
++[![CI/CD Pipeline](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/ci-cd.yml)
++[![PR Checks](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/JefinFrancis/ct-b2c-storefront/actions/workflows/pr-checks.yml)
++
++## Quick Links
++
++- 📖 [Documentation Index](docs/DOCUMENTATION_INDEX.md)
++- 🚀 [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
++- 🤖 [GitHub Actions Guide](.github/GITHUB_ACTIONS_GUIDE.md)
++- 📋 [GCP Deployment Checklist](GCP_DEPLOYMENT_CHECKLIST.md)
++- 🧪 [Testing Guide](docs/TESTING_GUIDE.md)
 
 ## Tech Stack
 

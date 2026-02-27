@@ -1,10 +1,10 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 22 / GCP Deployment Configuration Complete
+2026-02-27 — Agent Session 23 / GitHub Actions CI/CD Complete
 
 ## Project State
-✅ **DEPLOYMENT-READY** — All 7 B2C features complete with 151 passing tests. **GCP deployment configuration fully implemented**: updated Dockerfiles for monorepo structure, GitHub Actions CI/CD pipeline (test → build → deploy staging → deploy prod), automated deployment scripts (setup-gcp.sh, deploy-to-gcp.sh), comprehensive deployment checklist. GitHub repository public with GitFlow branches (main, develop) protected. commercetools project (c-spire-oe-demo, US region) fully configured with Admin API client. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) and Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments (mock PSP), wishlist, discount codes, cart merge (anonymousCartSignInMode), billing addresses. Dark mode + responsive design throughout. Unit testing 151 tests (64 API/Jest + 87 Web/Vitest). **Ready to deploy to GCP Cloud Run.**
+✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests. **GitHub Actions CI/CD fully automated**: environment-specific web builds (staging/production), PR validation workflow, automated testing/linting/typecheck, Docker build verification, deployment with manual production approval. Resolved critical deployment bug where web images used wrong API URLs. GCP deployment configuration complete: updated Dockerfiles, deployment scripts, Secret Manager integration, comprehensive documentation. GitHub repository public with GitFlow branches protected. commercetools project (c-spire-oe-demo, US region) fully configured. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) + Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments, wishlist, discount codes, cart merge. Dark mode + responsive. **Push to main triggers automated staging + production deployments.**
 
 **Documentation Suite Created (Session 20):**
 - 8 comprehensive markdown files (15K+ words)
@@ -16,8 +16,12 @@
 - DEPLOYMENT_GUIDE.md — Local dev + GCP deployment
 - QUICK_REFERENCE.md — Common tasks, workflows, FAQ
 - DOCUMENTATION_INDEX.md — Master navigation guide
++
++**CI/CD Documentation (Session 23):**
++- GITHUB_ACTIONS_GUIDE.md — Comprehensive CI/CD guide with workflow details, troubleshooting, best practices
++- README.md updated with workflow badges and quick links
 
-**Feature branch**: `chore/bmad-integration-project-docs` (from Session 19) carries forward (will be merged after session 20 work is committed).
+**Feature branch**: `feature/CT-9-github-actions-deployment` (created from develop, all work committed)
 
 ## Session 21: GitFlow Enforcement Injected into BMAD Workflows
 
@@ -94,14 +98,10 @@
    - Automatic Cloud Run URL injection into web service
 
 3. **Deployment Automation Scripts:**
-   - `scripts/setup-gcp.sh` — Initial GCP project setup:
-     - Enables required APIs (Cloud Run, Artifact Registry, Secret Manager, Cloud Build)
-     - Creates Artifact Registry repository
-     - Creates/updates secrets in Secret Manager
++   - `scripts/setup-gcp.sh` — Initial GCP project setup (APIs, Artifact Registry, Secret Manager, IAM)
      - Configures IAM permissions for Cloud Run
      - Interactive prompts for commercetools and Redis credentials
-   - `scripts/deploy-to-gcp.sh` — Manual deployment script:
-     - Accepts staging/production parameter
++   - `scripts/deploy-to-gcp.sh` — Manual deployment script (staging/production)
      - Builds Docker images locally
      - Pushes to Artifact Registry
      - Deploys to Cloud Run with environment-specific configs
@@ -110,14 +110,7 @@
 
 4. **Configuration Files:**
    - `.gcloudignore` — Excludes unnecessary files from GCP deployments
-   - `GCP_DEPLOYMENT_CHECKLIST.md` — Comprehensive step-by-step deployment guide:
-     - Prerequisites checklist
-     - Redis setup (Upstash recommended)
-     - GCP project configuration
-     - GitHub secrets setup
-     - Deployment verification
-     - Custom domain configuration
-     - Monitoring and troubleshooting
++   - `GCP_DEPLOYMENT_CHECKLIST.md` — Comprehensive deployment guide (prerequisites, setup, verification, troubleshooting)
 
 5. **Environment Configuration:**
    - **Staging:** min-instances=0 (scales to zero), 1Gi API + 512Mi Web
@@ -126,16 +119,122 @@
    - API ingress: internal-and-cloud-load-balancing (callable by Web only)
    - Web ingress: all (publicly accessible)
 
-**Testing:**
-- All 151 tests passing (64 API + 87 Web)
-- Build verification completed
-- Scripts made executable
-
-**Commit:**
-- Conventional commit: `feat(deployment): add GCP Cloud Run deployment configuration`
-- Commit hash: e4f67b3
-
-**Status:** Ready to push branch and create PR to develop. Next step: User must configure GCP project and deploy.
++**Post-Session Fixes (on develop branch):**
++- Fixed API tsconfig.json to exclude test files from build
++- Removed PORT env var from Cloud Run (reserved variable)
++- Updated deploy script to build web images after API deployment
++
++**Status:** Session 22 complete, PR merged to develop. Deployment infrastructure ready.
++
++## Session 23: GitHub Actions CI/CD Automation
++
++**Objective:** Fix environment-specific web builds in GitHub Actions and add comprehensive PR validation workflow.
++
++**Branch:** `feature/CT-9-github-actions-deployment` (created from develop)
++
++**Problem Identified:**
++The existing CI/CD workflow (from Session 22) had a critical bug:
++- **Build-and-push job** built web image with hardcoded `PROD_API_URL` at build time
++- Same web image was deployed to BOTH staging and production
++- **Result:** Staging web app tried to connect to production API (wrong URL!)
++- Next.js `NEXT_PUBLIC_*` vars are baked at build time, not runtime
++
++**Root Cause:** Trying to use one web image for multiple environments with different API URLs violates Next.js build-time variable baking.
++
++**Solution Implemented:**
++1. **Refactored ci-cd.yml workflow:**
++   - Renamed `build-and-push` job → `build-api` (API only)
++   - **Staging deployment:** Builds staging-specific web image with staging API URL (tagged `-staging`)
++   - **Production deployment:** Builds production-specific web image with production API URL (tagged with SHA)
++   - Web images built AFTER API deployment (to get actual API URL)
++   - Each environment gets correct `NEXT_PUBLIC_API_URL` at build time
++
++2. **Created pr-checks.yml workflow:**
++   - **Validate job:** TypeCheck + Lint + Tests (with coverage) + Code quality checks (TODO/FIXME count) + Bundle size analysis
++   - **Docker build test job:** Validates both Dockerfiles build successfully
++   - Fast feedback on PRs without deploying anything
++   - Parallel execution for speed
++
++3. **Created comprehensive documentation:**
++   - `.github/GITHUB_ACTIONS_GUIDE.md` — Complete guide covering:
++     - All workflows explained (CI/CD pipeline + PR checks)
++     - Required GitHub secrets
++     - Environment variables (GCP Secret Manager)
++     - Workflow triggers (automatic + manual approval)
++     - Monitoring and troubleshooting
++     - Deployment architecture diagram (Mermaid)
++     - Key features: environment-specific builds, manual production approval, rich summaries
++     - Best practices and related documentation links
++
++4. **Updated README.md:**
++   - Added GitHub Actions workflow badges (CI/CD Pipeline + PR Checks)
++   - Added "Quick Links" section with all documentation
++   - Visual status indicators for CI/CD health
++
++**Key Architecture Decisions:**
++- **API images:** Built once in `build-api` job, reused by both staging and production
++- **Web images:** Built per environment during deployment (staging gets `-staging` tag, production gets SHA + `latest`)
++- **Why?** Next.js bakes `NEXT_PUBLIC_*` vars at build time, so each environment needs its own image
++- **Consistency:** This matches the `deploy-to-gcp.sh` manual script behavior
++
++**Workflow Flow:**
++```
++Push to main → Test → Build API → Deploy Staging (build staging web) → Manual Approval → Deploy Production (build prod web)
++```
++
++**Testing:**
++- All 151 tests passing (64 API + 87 Web)
++- No errors in updated workflow files
++- Conventional commit message with BREAKING CHANGE tag
++
++**Commit:**
++- Conventional commit: `feat(ci/cd): implement environment-specific web builds and PR validation`
++- Commit hash: d6ce34e
++- Files changed: 5 (3 new, 2 modified)
++
++**Files Created:**
++- `.github/GITHUB_ACTIONS_GUIDE.md` — Comprehensive CI/CD documentation
++- `.github/workflows/pr-checks.yml` — PR validation workflow
++
++**Files Modified:**
++- `.github/workflows/ci-cd.yml` — Refactored for per-environment web builds
++- `README.md` — Added badges and quick links
++- `scripts/deploy-to-gcp.sh` — Already had per-environment build logic (from previous fix)
++
++**Status:** Ready to push branch and create PR to develop. All tests passing, documentation complete.
++
++## Known Issues
++
++None — All 151 tests passing, deployment configuration complete, CI/CD workflows automated.
++
++## Next Steps
++
++1. **Push branch and create PR** (Session 23 work):
++   ```bash
++   git push -u origin feature/CT-9-github-actions-deployment
++   gh pr create --base develop --title "feat(ci/cd): implement environment-specific web builds and PR validation"
++   ```
++
++2. **Configure GitHub Secrets** (for CI/CD):
++   - `GCP_PROJECT_ID` — Your GCP project ID
++   - `GCP_SA_KEY` — Service account JSON key (see GCP_DEPLOYMENT_CHECKLIST.md)
++
++3. **Deploy to GCP** (manual or via GitHub Actions):
++   - Option A: Manual deployment via `./scripts/deploy-to-gcp.sh staging`
++   - Option B: Merge to main → GitHub Actions deploys automatically
++
++4. **Release v1.0.0**:
++   - Tag release after first successful production deployment
++   - Update CHANGELOG.md with all features
++   - Announce stable v1.0.0
++
++5. **Future Enhancements** (Post-v1.0.0):
++   - Cloud CDN for static assets
++   - Custom domain with SSL
++   - Monitoring/alerting (Cloud Monitoring + Error Reporting)
++   - Performance optimization (caching strategies, image optimization)
++   - E2E testing (Playwright/Cypress)
++   - Production data seed script (real products)
 
 ## Completed Work
 
