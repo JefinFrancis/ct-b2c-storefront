@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CommercetoolsService } from "../commercetools/commercetools.service";
-import { CustomerUpdateAction } from "@commercetools/platform-sdk";
+import type { CommercetoolsService } from "../commercetools/commercetools.service";
+import type { CustomerUpdateAction } from "@commercetools/platform-sdk";
 
 interface UpdateCustomerInput {
   firstName?: string;

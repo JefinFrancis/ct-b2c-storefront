@@ -1,11 +1,13 @@
-import { Test, TestingModule } from "@nestjs/testing";
+import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { AuthService, JwtPayload } from "./auth.service";
+import type { JwtPayload } from "./auth.service";
+import { AuthService } from "./auth.service";
 import { CommercetoolsService } from "../commercetools/commercetools.service";
 
 describe("AuthService", () => {

@@ -9,7 +9,7 @@ import {
   Headers,
   BadRequestException,
 } from "@nestjs/common";
-import { CartService } from "./cart.service";
+import type { CartService } from "./cart.service";
 
 @Controller("cart")
 export class CartController {

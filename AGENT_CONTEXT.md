@@ -1,7 +1,51 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 27 / Fixed `apps/web` typecheck errors in tests
+2026-02-27 — Agent Session 28 / Migrated ESLint config to flat-config (v9) and fixed all lint errors
+
+## Session 28: ESLint v9 Flat Config Migration
+
+**Objective:** Fix `npx turbo lint` failure caused by ESLint v9 requiring flat config (`eslint.config.*`) instead of legacy `.eslintrc.*`.
+
+**Branch:** Working on `develop` (lint infrastructure fix)
+
+**Changes Made:**
+
+1. **Added root `eslint.config.cjs`** — Full ESLint v9 flat-config rewrite of `packages/eslint-config`:
+   - Uses `@eslint/js`, `@typescript-eslint/eslint-plugin` v8, `eslint-config-prettier`
+   - No `extends`/`parser` keys (invalid in flat config)
+   - Adds Node.js + `fetch` globals for TypeScript files
+   - Adds Jest globals (`jest`, `describe`, `it`, `expect`, etc.) for `*.spec.ts` / `__tests__` files
+   - `caughtErrorsIgnorePattern: '^_'` for catch bindings
+
+2. **Added `apps/web/eslint.config.cjs`** — Next.js-specific flat config:
+   - Loads `@next/eslint-plugin-next` with `recommended` + `core-web-vitals` rules
+   - Vitest globals for test files
+   - `no-undef: off` for TypeScript (TS itself catches undefined references)
+   - Migrated `web` lint script from deprecated `next lint` → `eslint` CLI
+
+3. **Fixed API code errors (auto-fixed + manual):**
+   - `redis.service.ts` — converted ternary-as-statement to `if/else` (`no-unused-expressions`)
+   - `cart.service.ts` — `catch (error)` → `catch (_error)` (unused catch binding)
+   - All `consistent-type-imports` violations across `apps/api/src` (auto-fixed)
+
+4. **Fixed Web code errors:**
+   - `checkout/page.tsx` — replaced `<a href="/products">` with `<Link href="/products">` from `next/link`
+   - `test-fixtures.ts` — `catch (e)` → `catch {}` (bare catch)
+   - All `consistent-type-imports` violations across `apps/web/src` (auto-fixed)
+
+5. **Removed legacy files:** `.eslintrc.cjs` (root)
+
+**Result:** `npx turbo lint` exits 0 across all packages. Remaining output is warnings only (`no-explicit-any` in test fixtures, `no-img-element` in 3 UI components — all intentional/acceptable).
+
+**Files Changed:**
+- `eslint.config.cjs` (new)
+- `.eslintrc.cjs` (deleted)
+- `apps/web/eslint.config.cjs` (new)
+- `apps/web/package.json` (lint script updated)
+- `apps/api/src/redis/redis.service.ts` (if/else refactor)
+- `apps/api/src/cart/cart.service.ts` (catch binding)
+- Multiple `*.ts`/`*.tsx` type imports auto-fixed
 
 ## Session 27: Web typecheck fixes
 

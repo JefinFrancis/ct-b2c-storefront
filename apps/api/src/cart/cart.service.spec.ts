@@ -1,4 +1,5 @@
-import { Test, TestingModule } from "@nestjs/testing";
+import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import { NotFoundException } from "@nestjs/common";
 import { CartService } from "./cart.service";
 import { CommercetoolsService } from "../commercetools/commercetools.service";

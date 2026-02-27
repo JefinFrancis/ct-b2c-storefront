@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CommercetoolsService } from '../../commercetools/commercetools.service';
 import { RedisService } from '../../redis/redis.service';
 

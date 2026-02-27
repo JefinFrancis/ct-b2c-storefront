@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts";
 import { CheckoutProvider, useCheckout } from "@/contexts/CheckoutContext";
@@ -92,9 +93,9 @@ function CheckoutContent() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 mb-4">Your cart is empty.</p>
-        <a href="/products" className="text-blue-600 hover:underline">
+        <Link href="/products" className="text-blue-600 hover:underline">
           Continue Shopping
-        </a>
+        </Link>
       </div>
     );
   }

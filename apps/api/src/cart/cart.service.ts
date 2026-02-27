@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CommercetoolsService } from "../commercetools/commercetools.service";
-import { RedisService } from "../redis/redis.service";
+import type { CommercetoolsService } from "../commercetools/commercetools.service";
+import type { RedisService } from "../redis/redis.service";
 
 interface AddItemInput {
   productId: string;
@@ -43,7 +43,7 @@ export class CartService {
     try {
       const response = await api.carts().withId({ ID: id }).get().execute();
       return response.body;
-    } catch (error) {
+    } catch (_error) {
       throw new NotFoundException(`Cart with id "${id}" not found`);
     }
   }

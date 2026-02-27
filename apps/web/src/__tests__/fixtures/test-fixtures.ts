@@ -30,7 +30,7 @@ export const test = (base as any).extend({
       if (await logoutButton.isVisible()) {
         await logoutButton.click();
       }
-    } catch (e) {
+    } catch {
       // Silently ignore if logout not found
     }
   },

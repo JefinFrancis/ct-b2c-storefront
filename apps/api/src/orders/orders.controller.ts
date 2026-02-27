@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Body, UseGuards, Req } from "@nestjs/common";
-import { OrdersService } from "./orders.service";
+import type { OrdersService } from "./orders.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { Request } from "express";
+import type { Request } from "express";
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; email: string };

@@ -3,7 +3,8 @@
  * GET /health → 200 OK
  */
 import { Controller, Get } from "@nestjs/common";
-import { HealthCheck, HealthCheckService } from "@nestjs/terminus";
+import type { HealthCheckService } from "@nestjs/terminus";
+import { HealthCheck } from "@nestjs/terminus";
 
 @Controller("health")
 export class HealthController {

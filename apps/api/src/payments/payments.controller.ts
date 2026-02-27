@@ -7,9 +7,9 @@ import {
   UseGuards,
   Req,
 } from "@nestjs/common";
-import { PaymentsService } from "./payments.service";
+import type { PaymentsService } from "./payments.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { Request } from "express";
+import type { Request } from "express";
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; email: string };
