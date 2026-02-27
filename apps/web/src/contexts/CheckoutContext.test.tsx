@@ -3,7 +3,6 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { CheckoutProvider, useCheckout } from "./CheckoutContext";
 import type { Cart, ShippingMethod, Order } from "@ct-b2c/types";
 
@@ -264,7 +263,7 @@ describe("CheckoutContext", () => {
     it("sets shipping method and advances to review step", async () => {
       const updatedCart = {
         ...mockCart,
-        shippingInfo: { shippingMethodName: "Standard", price: { centAmount: 599, currencyCode: "USD" } },
+        shippingInfo: { shippingMethodName: "Standard", price: { centAmount: 599, currencyCode: "USD", fractionDigits: 2 } },
       };
       (cartApi.setShippingMethod as ReturnType<typeof vi.fn>).mockResolvedValue(
         updatedCart

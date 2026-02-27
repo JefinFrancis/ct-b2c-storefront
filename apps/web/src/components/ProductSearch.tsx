@@ -4,7 +4,8 @@
  */
 "use client";
 
-import { useState, useCallback, FormEvent } from "react";
+import type { FormEvent } from "react";
+import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface ProductSearchProps {

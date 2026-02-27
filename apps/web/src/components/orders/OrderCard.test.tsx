@@ -32,7 +32,7 @@ const mockOrder: Order = {
     {
       id: "line-1",
       productId: "prod-1",
-      name: "Test Product",
+      name: { "en-US": "Test Product" },
       quantity: 2,
       variant: {
         id: 1,
@@ -41,14 +41,14 @@ const mockOrder: Order = {
       },
       price: {
         id: "price-1",
-        value: { centAmount: 2999, currencyCode: "USD" },
+        value: { centAmount: 2999, currencyCode: "USD", fractionDigits: 2 },
       },
-      totalPrice: { centAmount: 5998, currencyCode: "USD" },
+      totalPrice: { centAmount: 5998, currencyCode: "USD", fractionDigits: 2 },
     },
     {
       id: "line-2",
       productId: "prod-2",
-      name: "Another Product",
+      name: { "en-US": "Another Product" },
       quantity: 1,
       variant: {
         id: 2,
@@ -56,12 +56,12 @@ const mockOrder: Order = {
       },
       price: {
         id: "price-2",
-        value: { centAmount: 4999, currencyCode: "USD" },
+        value: { centAmount: 4999, currencyCode: "USD", fractionDigits: 2 },
       },
-      totalPrice: { centAmount: 4999, currencyCode: "USD" },
+      totalPrice: { centAmount: 4999, currencyCode: "USD", fractionDigits: 2 },
     },
   ],
-  totalPrice: { centAmount: 10997, currencyCode: "USD" },
+  totalPrice: { centAmount: 10997, currencyCode: "USD", fractionDigits: 2 },
   orderState: "Open",
   paymentState: "Paid",
   shipmentState: "Shipped",
@@ -139,26 +139,26 @@ describe("OrderCard", () => {
         {
           id: "line-3",
           productId: "prod-3",
-          name: "Product 3",
+          name: { "en-US": "Product 3" },
           quantity: 1,
           variant: { id: 3 },
           price: {
             id: "price-3",
-            value: { centAmount: 1999, currencyCode: "USD" },
+            value: { centAmount: 1999, currencyCode: "USD", fractionDigits: 2 },
           },
-          totalPrice: { centAmount: 1999, currencyCode: "USD" },
+          totalPrice: { centAmount: 1999, currencyCode: "USD", fractionDigits: 2 },
         },
         {
           id: "line-4",
           productId: "prod-4",
-          name: "Product 4",
+          name: { "en-US": "Product 4" },
           quantity: 1,
           variant: { id: 4 },
           price: {
             id: "price-4",
-            value: { centAmount: 1999, currencyCode: "USD" },
+            value: { centAmount: 1999, currencyCode: "USD", fractionDigits: 2 },
           },
-          totalPrice: { centAmount: 1999, currencyCode: "USD" },
+          totalPrice: { centAmount: 1999, currencyCode: "USD", fractionDigits: 2 },
         },
       ],
     };

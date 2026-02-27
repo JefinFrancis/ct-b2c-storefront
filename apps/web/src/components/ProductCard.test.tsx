@@ -5,6 +5,7 @@ import type { Product } from "@ct-b2c/types";
 
 const createMockProduct = (overrides: Partial<Product> = {}): Product => ({
   id: "prod-123",
+  version: 1,
   name: { "en-US": "Test Product" },
   slug: { "en-US": "test-product" },
   masterVariant: {
@@ -14,11 +15,10 @@ const createMockProduct = (overrides: Partial<Product> = {}): Product => ({
       {
         id: "price-1",
         value: {
-          centAmount: 9999,
-          currencyCode: "USD",
-          type: "centPrecision",
-          fractionDigits: 2,
-        },
+            centAmount: 9999,
+            currencyCode: "USD",
+            fractionDigits: 2,
+          },
       },
     ],
     images: [
@@ -116,7 +116,6 @@ describe("ProductCard", () => {
             value: {
               centAmount: 8500,
               currencyCode: "EUR",
-              type: "centPrecision",
               fractionDigits: 2,
             },
           },
@@ -125,7 +124,6 @@ describe("ProductCard", () => {
             value: {
               centAmount: 9999,
               currencyCode: "USD",
-              type: "centPrecision",
               fractionDigits: 2,
             },
           },
@@ -151,7 +149,6 @@ describe("ProductCard", () => {
             value: {
               centAmount: 9999,
               currencyCode: "USD",
-              type: "centPrecision",
               fractionDigits: 2,
             },
           },

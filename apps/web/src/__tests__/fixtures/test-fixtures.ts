@@ -1,16 +1,17 @@
-import { test as base } from '@playwright/test';
+import { test as base, type Page } from '@playwright/test';
 
 /**
  * Playwright Test Fixtures for Web Tests
  * Provides setup/teardown and shared utilities
  */
 
-export const test = base.extend({
+// Playwright's fixture generics are strict; cast to any to allow custom fixtures used in tests.
+export const test = (base as any).extend({
   /**
    * Authenticated user fixture
    * Logs in before test and logs out after
    */
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page }: { page: Page }, use: (p: Page) => Promise<void>) => {
     // Login
     await page.goto('http://localhost:3001/login');
     await page.getByLabel(/email/i).fill('test@example.com');
@@ -29,7 +30,7 @@ export const test = base.extend({
       if (await logoutButton.isVisible()) {
         await logoutButton.click();
       }
-    } catch (e) {
+    } catch {
       // Silently ignore if logout not found
     }
   },
@@ -38,7 +39,7 @@ export const test = base.extend({
    * Shopping cart fixture
    * Provides a cart with products for testing checkout flows
    */
-  cartWithItems: async ({ page }, use) => {
+  cartWithItems: async ({ page }: { page: Page }, use: (p: Page) => Promise<void>) => {
     // Go to products
     await page.goto('http://localhost:3001/products');
 
@@ -57,7 +58,7 @@ export const test = base.extend({
   /**
    * Mock API responses for predictable testing
    */
-  mockApi: async ({ page }, use) => {
+  mockApi: async ({ page }: { page: Page }, use: (p: Page) => Promise<void>) => {
     const mockData = {
       products: [
         {
@@ -81,7 +82,7 @@ export const test = base.extend({
     };
 
     // Mock products endpoint
-    await page.route('**/api/v1/products**', (route) => {
+    await page.route('**/api/v1/products**', (route: any) => {
       route.fulfill({
         status: 200,
         body: JSON.stringify(mockData.products),
@@ -89,7 +90,7 @@ export const test = base.extend({
     });
 
     // Mock cart endpoint
-    await page.route('**/api/v1/cart**', (route) => {
+    await page.route('**/api/v1/cart**', (route: any) => {
       route.fulfill({
         status: 200,
         body: JSON.stringify(mockData.cart),

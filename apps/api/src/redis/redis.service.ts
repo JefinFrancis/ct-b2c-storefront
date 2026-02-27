@@ -4,8 +4,9 @@
  * (UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
  * Used for: CT response caching, cart session storage, token caching.
  */
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { OnModuleDestroy } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
 import { Redis as Upstash } from "@upstash/redis";
 import IORedis from "ioredis";
 
@@ -51,15 +52,19 @@ export class RedisService implements OnModuleDestroy {
   async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     if (this.useUpstash) {
       const client = this.client as Upstash;
-      ttlSeconds
-        ? await client.set(key, value, { ex: ttlSeconds })
-        : await client.set(key, value);
+      if (ttlSeconds) {
+        await client.set(key, value, { ex: ttlSeconds });
+      } else {
+        await client.set(key, value);
+      }
     } else {
       const client = this.client as IORedis;
       const serialized = JSON.stringify(value);
-      ttlSeconds
-        ? await client.setex(key, ttlSeconds, serialized)
-        : await client.set(key, serialized);
+      if (ttlSeconds) {
+        await client.setex(key, ttlSeconds, serialized);
+      } else {
+        await client.set(key, serialized);
+      }
     }
   }
 

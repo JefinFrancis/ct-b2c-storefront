@@ -4,8 +4,8 @@ import {
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { CommercetoolsService } from "../commercetools/commercetools.service";
+import type { JwtService } from "@nestjs/jwt";
+import type { CommercetoolsService } from "../commercetools/commercetools.service";
 
 interface RegisterInput {
   email: string;

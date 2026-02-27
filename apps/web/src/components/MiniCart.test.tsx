@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import MiniCart from "./MiniCart";
 import * as CartContextModule from "@/contexts/CartContext";
-import type { Cart } from "@ct-b2c/types";
+import { createMockCart, createMockLineItem, makeCartContextValue } from "@/__tests__/test-utils/mockCart";
 
 // Mock the CartContext
 vi.mock("@/contexts/CartContext", () => ({
@@ -11,56 +11,12 @@ vi.mock("@/contexts/CartContext", () => ({
 
 const mockUseCart = vi.mocked(CartContextModule.useCart);
 
-const createMockCart = (lineItems: Cart["lineItems"] = []): Cart => ({
-  id: "cart-123",
-  version: 1,
-  createdAt: "2024-01-01T00:00:00.000Z",
-  lastModifiedAt: "2024-01-01T00:00:00.000Z",
-  lineItems,
-  cartState: "Active",
-  totalPrice: {
-    centAmount: lineItems.reduce(
-      (sum, item) => sum + item.price.value.centAmount * item.quantity,
-      0
-    ),
-    currencyCode: "USD",
-    type: "centPrecision",
-    fractionDigits: 2,
-  },
-  totalLineItemQuantity: lineItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  ),
-});
-
-const mockLineItem = {
-  id: "line-item-1",
-  productId: "prod-1",
-  name: { "en-US": "Test Product" },
+const mockLineItem = createMockLineItem({
   quantity: 2,
-  price: {
-    id: "price-1",
-    value: {
-      centAmount: 2999,
-      currencyCode: "USD",
-      type: "centPrecision" as const,
-      fractionDigits: 2,
-    },
-  },
-  totalPrice: {
-    centAmount: 5998,
-    currencyCode: "USD",
-    type: "centPrecision" as const,
-    fractionDigits: 2,
-  },
-  variant: {
-    id: 1,
-    sku: "SKU-001",
-    images: [{ url: "https://example.com/image.jpg", dimensions: { w: 100, h: 100 } }],
-    attributes: [],
-    prices: [],
-  },
-};
+  price: { id: "price-1", value: { centAmount: 2999, currencyCode: "USD", fractionDigits: 2 } },
+  totalPrice: { centAmount: 5998, currencyCode: "USD", fractionDigits: 2 },
+  variant: { id: 1, sku: "SKU-001", images: [{ url: "https://example.com/image.jpg", dimensions: { w: 100, h: 100 } }], attributes: [] },
+});
 
 describe("MiniCart", () => {
   beforeEach(() => {
@@ -68,16 +24,7 @@ describe("MiniCart", () => {
   });
 
   it("renders cart icon button", () => {
-    mockUseCart.mockReturnValue({
-      cart: null,
-      isLoading: false,
-      error: null,
-      itemCount: 0,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: null, itemCount: 0 }));
 
     render(<MiniCart />);
 
@@ -86,16 +33,7 @@ describe("MiniCart", () => {
   });
 
   it("shows item count badge when cart has items", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([mockLineItem]),
-      isLoading: false,
-      error: null,
-      itemCount: 2,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([mockLineItem]), itemCount: 2 }));
 
     render(<MiniCart />);
 
@@ -103,16 +41,7 @@ describe("MiniCart", () => {
   });
 
   it("does not show badge when cart is empty", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([]),
-      isLoading: false,
-      error: null,
-      itemCount: 0,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([]), itemCount: 0 }));
 
     render(<MiniCart />);
 
@@ -122,16 +51,7 @@ describe("MiniCart", () => {
   });
 
   it("shows 99+ when item count exceeds 99", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([mockLineItem]),
-      isLoading: false,
-      error: null,
-      itemCount: 150,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([mockLineItem]), itemCount: 150 }));
 
     render(<MiniCart />);
 
@@ -139,16 +59,7 @@ describe("MiniCart", () => {
   });
 
   it("opens dropdown when button is clicked", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([]),
-      isLoading: false,
-      error: null,
-      itemCount: 0,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([]), itemCount: 0 }));
 
     render(<MiniCart />);
 
@@ -159,16 +70,7 @@ describe("MiniCart", () => {
   });
 
   it("shows loading state while cart is loading", () => {
-    mockUseCart.mockReturnValue({
-      cart: null,
-      isLoading: true,
-      error: null,
-      itemCount: 0,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: null, isLoading: true, itemCount: 0 }));
 
     render(<MiniCart />);
 
@@ -181,16 +83,7 @@ describe("MiniCart", () => {
   });
 
   it("shows empty cart message when cart has no items", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([]),
-      isLoading: false,
-      error: null,
-      itemCount: 0,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([]), itemCount: 0 }));
 
     render(<MiniCart />);
 
@@ -202,16 +95,7 @@ describe("MiniCart", () => {
   });
 
   it("displays line items when cart has products", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([mockLineItem]),
-      isLoading: false,
-      error: null,
-      itemCount: 2,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([mockLineItem]), itemCount: 2 }));
 
     render(<MiniCart />);
 
@@ -223,16 +107,7 @@ describe("MiniCart", () => {
   });
 
   it("closes dropdown when clicking outside", () => {
-    mockUseCart.mockReturnValue({
-      cart: createMockCart([]),
-      isLoading: false,
-      error: null,
-      itemCount: 0,
-      addItem: vi.fn(),
-      updateQuantity: vi.fn(),
-      removeItem: vi.fn(),
-      refreshCart: vi.fn(),
-    });
+    mockUseCart.mockReturnValue(makeCartContextValue({ cart: createMockCart([]), itemCount: 0 }));
 
     render(
       <div>

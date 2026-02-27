@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
-import { CommercetoolsService } from "../commercetools/commercetools.service";
-import { CartService } from "../cart/cart.service";
+import type { CommercetoolsService } from "../commercetools/commercetools.service";
+import type { CartService } from "../cart/cart.service";
 
 @Injectable()
 export class OrdersService {

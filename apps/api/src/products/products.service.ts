@@ -8,8 +8,8 @@ import {
   HttpException,
   HttpStatus,
 } from "@nestjs/common";
-import { CommercetoolsService } from "../commercetools/commercetools.service";
-import { RedisService } from "../redis/redis.service";
+import type { CommercetoolsService } from "../commercetools/commercetools.service";
+import type { RedisService } from "../redis/redis.service";
 
 interface FindAllParams {
   limit?: number;

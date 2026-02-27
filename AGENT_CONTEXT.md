@@ -1,7 +1,60 @@
 # AGENT CONTEXT — CT B2C Storefront
 
 ## Last Updated
-2026-02-27 — Agent Session 26 / GCP Staging Ingress + Upstash Notes
+2026-02-27 — Agent Session 28 / Migrated ESLint config to flat-config (v9) and fixed all lint errors
+
+## Session 28: ESLint v9 Flat Config Migration
+
+**Objective:** Fix `npx turbo lint` failure caused by ESLint v9 requiring flat config (`eslint.config.*`) instead of legacy `.eslintrc.*`.
+
+**Branch:** Working on `develop` (lint infrastructure fix)
+
+**Changes Made:**
+
+1. **Added root `eslint.config.cjs`** — Full ESLint v9 flat-config rewrite of `packages/eslint-config`:
+   - Uses `@eslint/js`, `@typescript-eslint/eslint-plugin` v8, `eslint-config-prettier`
+   - No `extends`/`parser` keys (invalid in flat config)
+   - Adds Node.js + `fetch` globals for TypeScript files
+   - Adds Jest globals (`jest`, `describe`, `it`, `expect`, etc.) for `*.spec.ts` / `__tests__` files
+   - `caughtErrorsIgnorePattern: '^_'` for catch bindings
+
+2. **Added `apps/web/eslint.config.cjs`** — Next.js-specific flat config:
+   - Loads `@next/eslint-plugin-next` with `recommended` + `core-web-vitals` rules
+   - Vitest globals for test files
+   - `no-undef: off` for TypeScript (TS itself catches undefined references)
+   - Migrated `web` lint script from deprecated `next lint` → `eslint` CLI
+
+3. **Fixed API code errors (auto-fixed + manual):**
+   - `redis.service.ts` — converted ternary-as-statement to `if/else` (`no-unused-expressions`)
+   - `cart.service.ts` — `catch (error)` → `catch (_error)` (unused catch binding)
+   - All `consistent-type-imports` violations across `apps/api/src` (auto-fixed)
+
+4. **Fixed Web code errors:**
+   - `checkout/page.tsx` — replaced `<a href="/products">` with `<Link href="/products">` from `next/link`
+   - `test-fixtures.ts` — `catch (e)` → `catch {}` (bare catch)
+   - All `consistent-type-imports` violations across `apps/web/src` (auto-fixed)
+
+5. **Removed legacy files:** `.eslintrc.cjs` (root)
+
+**Result:** `npx turbo lint` exits 0 across all packages. Remaining output is warnings only (`no-explicit-any` in test fixtures, `no-img-element` in 3 UI components — all intentional/acceptable).
+
+**Files Changed:**
+- `eslint.config.cjs` (new)
+- `.eslintrc.cjs` (deleted)
+- `apps/web/eslint.config.cjs` (new)
+- `apps/web/package.json` (lint script updated)
+- `apps/api/src/redis/redis.service.ts` (if/else refactor)
+- `apps/api/src/cart/cart.service.ts` (catch binding)
+- Multiple `*.ts`/`*.tsx` type imports auto-fixed
+
+## Session 27: Web typecheck fixes
+
+**Objective:** Resolve TypeScript type errors reported by `npx turbo typecheck --filter=web` and make `apps/web` typecheck clean.
+
+**Changes Made:**
+- Updated test mocks in `apps/web` to align with `@ct-b2c/types` definitions (added required `version` fields, converted plain `name` strings to `LocalizedString` objects, removed invalid `type`/`prices` fields from money/variant mocks, and removed unused imports).
+
+**Status:** Local `web` typecheck is clean. Files modified: `ProductCard.test.tsx`, `OrderCard.test.tsx`, `CartContext.test.tsx`, `AuthContext.test.tsx`, `CheckoutContext.test.tsx`.
 
 ## Project State
 ✅ **PRODUCTION-READY** — All 7 B2C features complete with 151 passing tests. **GitHub Actions CI/CD fully automated**: environment-specific web builds (staging/production), PR validation workflow, automated testing/linting/typecheck, Docker build verification, deployment with manual production approval. Resolved critical deployment bug where web images used wrong API URLs. GCP deployment configuration complete: updated Dockerfiles, deployment scripts, Secret Manager integration, comprehensive documentation. GitHub repository public with GitFlow branches protected. commercetools project (c-spire-oe-demo, US region) fully configured. Sample data seeded: 42 categories, 127 products. Turborepo monorepo with isolated NestJS API (port 8080) + Next.js 15 frontend (port 3000). Complete CT integration: addresses, payments, wishlist, discount codes, cart merge. Dark mode + responsive. **Push to main triggers automated staging + production deployments.**

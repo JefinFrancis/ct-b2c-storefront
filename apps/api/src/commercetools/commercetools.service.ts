@@ -4,7 +4,7 @@
  * Exposes typed API roots for each auth flow.
  */
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { ClientBuilder } from "@commercetools/sdk-client-v2";
 import { createApiBuilderFromCtpClient } from "@commercetools/platform-sdk";
 

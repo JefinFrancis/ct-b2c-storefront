@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { CommercetoolsService } from "../commercetools/commercetools.service";
+import type { CommercetoolsService } from "../commercetools/commercetools.service";
 
 @Injectable()
 export class WishlistService {

@@ -5,7 +5,7 @@
  * GET /api/v1/products/:slug — single product by slug
  */
 import { Controller, Get, Param, Query } from "@nestjs/common";
-import { ProductsService } from "./products.service";
+import type { ProductsService } from "./products.service";
 
 @Controller("products")
 export class ProductsController {
