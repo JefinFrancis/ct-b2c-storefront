@@ -1,7 +1,10 @@
 # Env files — never commit these
+**/.env
 **/.env.local
 **/.env.*.local
-scripts/.env
+**/.env.production
+**/.env.staging
+**/.env.development
 
 # Docker overrides
 docker-compose.override.yml
